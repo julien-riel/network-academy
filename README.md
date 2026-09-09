@@ -72,3 +72,12 @@ URL : `https://julien-riel.github.io/network-academy/27914a54-b0e7-4e45-ae03-a4f
 
 Le workflow active Pages automatiquement (`configure-pages` avec `enablement: true`) et se déclenche sur push vers
 `main` ou manuellement (`workflow_dispatch`). Pour changer le chemin, remplacer la valeur de `PAGES_PATH`.
+
+## Déploiement (GitHub Pages)
+
+Le workflow `.github/workflows/pages.yml` se déclenche à chaque push sur `main` : tests, build Vite avec la base
+`/network-academy/<PAGES_PATH>/`, puis publication sur GitHub Pages. Le site est servi sous un chemin GUID
+(`PAGES_PATH` dans le workflow) et la racine du site reste vide.
+
+Prérequis côté dépôt : Settings → Pages → Source « GitHub Actions », et Settings → Environments → `github-pages` →
+« Deployment branches » doit autoriser `main`.
