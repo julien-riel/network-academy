@@ -62,3 +62,13 @@ qui parle à qui, quand, ports, séquence, si ça brise, concepts reliés, appro
 
 Ajouter un fichier JSON dans le bon dossier de `/content` (les fichiers sont chargés par `import.meta.glob`),
 puis `npm test` vérifie que toutes les références (concepts, questions, modules) se résolvent.
+
+## Déploiement GitHub Pages
+
+Le workflow `.github/workflows/pages.yml` construit l’application et la publie sur GitHub Pages sous un chemin
+obscur (un GUID, variable `PAGES_PATH` du workflow). Rien n’est publié à la racine du site.
+
+URL : `https://julien-riel.github.io/network-academy/27914a54-b0e7-4e45-ae03-a4f990e0c6be/`
+
+Le workflow active Pages automatiquement (`configure-pages` avec `enablement: true`) et se déclenche sur push vers
+`main` ou manuellement (`workflow_dispatch`). Pour changer le chemin, remplacer la valeur de `PAGES_PATH`.

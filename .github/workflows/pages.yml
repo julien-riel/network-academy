@@ -1,0 +1,55 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main, claude/netexperience-academy-prd-cgijv5]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  # Chemin obscur : le site est servi sous https://<owner>.github.io/<repo>/<PAGES_PATH>/
+  PAGES_PATH: 27914a54-b0e7-4e45-ae03-a4f990e0c6be
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Build under the GUID path
+        run: npx vite build --base="/${{ github.event.repository.name }}/${PAGES_PATH}/"
+      - name: Stage site
+        run: |
+          mkdir -p site/"$PAGES_PATH"
+          cp -r dist/. site/"$PAGES_PATH"/
+          # La racine du site reste vide : rien n'y est publié.
+          touch site/.nojekyll
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}${{ env.PAGES_PATH }}/
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
