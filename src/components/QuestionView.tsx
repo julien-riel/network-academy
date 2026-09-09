@@ -111,7 +111,15 @@ function Choices({ q, answer, onChange, revealed }: { q: MultipleChoiceQuestion 
 }
 
 function Ordering({ q, answer, onChange, revealed }: { q: OrderingQuestion; answer: Answer | undefined; onChange: (a: Answer) => void; revealed: boolean }) {
-  const initial = useMemo(() => shuffle(q.items, seedOf(q.id)), [q])
+  const initial = useMemo(() => {
+    // Re-shuffle until at most a third of the items sit at their correct position.
+    for (let k = 0; k < 20; k++) {
+      const cand = shuffle(q.items, seedOf(q.id + k))
+      const inPlace = cand.filter((x, i) => x === q.items[i]).length
+      if (inPlace <= Math.floor(q.items.length / 3)) return cand
+    }
+    return [...q.items].reverse()
+  }, [q])
   const order = answer && answer.type === 'ordering' && answer.order.length ? answer.order : initial
   const move = (i: number, d: number) => {
     const j = i + d

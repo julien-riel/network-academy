@@ -3,15 +3,17 @@ import { moduleById, questionById } from '../content'
 import { ConceptChips, Empty, ProgressBar } from '../components/common'
 import { QuizRunner } from '../components/QuizRunner'
 import { moduleCompletion, useProgress } from '../engine/progress'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { shuffle } from '../engine/recommend'
 
 export default function ModulePage() {
   const { moduleId } = useParams()
   const m = moduleId ? moduleById.get(moduleId) : undefined
   const p = useProgress()
   const [quizOpen, setQuizOpen] = useState(false)
+  // A new random order each time the quiz is opened.
+  const quiz = useMemo(() => shuffle((m?.quiz ?? []).map((id) => questionById.get(id)).filter((q) => q != null)), [m, quizOpen])
   if (!m) return <Empty>Module introuvable.</Empty>
-  const quiz = m.quiz.map((id) => questionById.get(id)).filter((q) => q != null)
   const quizDone = p.results.find((r) => r.kind === 'module' && r.moduleId === m.id)
   const allLessonsDone = m.lessons.every((l) => p.lessonsDone[l.id])
   return (
