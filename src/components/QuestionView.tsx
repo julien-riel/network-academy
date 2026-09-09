@@ -223,7 +223,6 @@ function Layer({ q, answer, onChange, revealed }: { q: LayerQuestion; answer: An
           <div className="layer-row" key={l.n}>
             <div className="layer-name">
               {l.n} · {l.name}
-              <small>{l.hint}</small>
             </div>
             <div
               className={'layer-drop' + (over === l.n ? ' over' : '')}
