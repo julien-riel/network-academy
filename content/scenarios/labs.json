@@ -169,20 +169,20 @@
         "prompt": "Où est le problème ?",
         "choices": [
           {
-            "label": "DNS",
+            "label": "La résolution DNS",
             "correct": true,
             "feedback": "La connectivité IP jusqu’à Internet est prouvée. Seule la résolution des noms échoue."
           },
           {
-            "label": "Association Wi-Fi",
+            "label": "L’association Wi-Fi",
             "feedback": "Le client est bien au-delà de la couche 2."
           },
           {
-            "label": "NAT",
+            "label": "Le NAT du routeur",
             "feedback": "Le ping vers une IP publique passe : le NAT fonctionne."
           },
           {
-            "label": "DHCP",
+            "label": "Le serveur DHCP",
             "feedback": "L’IP et la gateway sont bonnes. DHCP a fait son travail — sauf peut-être l’option DNS qu’il a distribuée."
           }
         ]
@@ -191,11 +191,11 @@
         "prompt": "D’où vient l’adresse du résolveur DNS du client ?",
         "choices": [
           {
-            "label": "Du beacon de l’AP",
+            "label": "Du beacon 802.11 de l’AP",
             "feedback": "Le beacon ne transporte aucune info IP."
           },
           {
-            "label": "De l’Ack DHCP",
+            "label": "De l’Ack DHCP (option DNS)",
             "correct": true,
             "feedback": "Oui. Vérifier quel résolveur a été distribué, et s’il est joignable depuis ce VLAN (pare-feu inter-VLAN, résolveur down)."
           },
