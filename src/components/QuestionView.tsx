@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import { OSI_LAYERS } from '../content'
 import type { Answer, Grade } from '../engine/grading'
-import { shuffle } from '../engine/recommend'
-import type { LayerQuestion, MatchingQuestion, OrderingQuestion, Question } from '../types/content'
+import { seedOf, shuffle } from '../engine/recommend'
+import type { LayerQuestion, MatchingQuestion, MultipleChoiceQuestion, OrderingQuestion, Question, TroubleshootingQuestion } from '../types/content'
 import { ConceptChips, Prose } from './common'
 import { typeLabel } from './quizUtils'
 
@@ -59,26 +59,8 @@ export function QuestionView({ question: q, answer, onChange, revealed, grade }:
 function Body({ question: q, answer, onChange, revealed, grade }: Props) {
   switch (q.type) {
     case 'multiple-choice':
-    case 'troubleshooting': {
-      const sel = answer && (answer.type === 'multiple-choice' || answer.type === 'troubleshooting') ? answer.choice : null
-      return (
-        <div>
-          {q.choices.map((c, i) => {
-            let cls = 'choice'
-            if (revealed) {
-              if (i === q.answer) cls += ' correct'
-              else if (i === sel) cls += ' wrong'
-            } else if (i === sel) cls += ' selected'
-            return (
-              <button key={i} className={cls} disabled={revealed} onClick={() => onChange({ type: q.type, choice: i })}>
-                <span className="k">{LETTERS[i]}</span>
-                <span>{c}</span>
-              </button>
-            )
-          })}
-        </div>
-      )
-    }
+    case 'troubleshooting':
+      return <Choices q={q} answer={answer} onChange={onChange} revealed={revealed} />
     case 'ordering':
       return <Ordering q={q} answer={answer} onChange={onChange} revealed={revealed} />
     case 'matching':
@@ -105,8 +87,31 @@ function Body({ question: q, answer, onChange, revealed, grade }: Props) {
   }
 }
 
+/** Choices are displayed in a per-question shuffled order so the correct answer has no fixed position. */
+function Choices({ q, answer, onChange, revealed }: { q: MultipleChoiceQuestion | TroubleshootingQuestion; answer: Answer | undefined; onChange: (a: Answer) => void; revealed: boolean }) {
+  const order = useMemo(() => shuffle(q.choices.map((_, i) => i), seedOf(q.id)), [q])
+  const sel = answer && (answer.type === 'multiple-choice' || answer.type === 'troubleshooting') ? answer.choice : null
+  return (
+    <div>
+      {order.map((orig, pos) => {
+        let cls = 'choice'
+        if (revealed) {
+          if (orig === q.answer) cls += ' correct'
+          else if (orig === sel) cls += ' wrong'
+        } else if (orig === sel) cls += ' selected'
+        return (
+          <button key={orig} className={cls} disabled={revealed} onClick={() => onChange({ type: q.type, choice: orig })}>
+            <span className="k">{LETTERS[pos]}</span>
+            <span>{q.choices[orig]}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 function Ordering({ q, answer, onChange, revealed }: { q: OrderingQuestion; answer: Answer | undefined; onChange: (a: Answer) => void; revealed: boolean }) {
-  const initial = useMemo(() => shuffle(q.items, q.id.length * 7919), [q])
+  const initial = useMemo(() => shuffle(q.items, seedOf(q.id)), [q])
   const order = answer && answer.type === 'ordering' && answer.order.length ? answer.order : initial
   const move = (i: number, d: number) => {
     const j = i + d
@@ -144,7 +149,7 @@ function Ordering({ q, answer, onChange, revealed }: { q: OrderingQuestion; answ
 }
 
 function Matching({ q, answer, onChange, revealed }: { q: MatchingQuestion; answer: Answer | undefined; onChange: (a: Answer) => void; revealed: boolean }) {
-  const rights = useMemo(() => shuffle(q.pairs.map((p) => p.right), q.id.length * 31), [q])
+  const rights = useMemo(() => shuffle(q.pairs.map((p) => p.right), seedOf(q.id + 'r')), [q])
   const mapping = answer && answer.type === 'matching' ? answer.mapping : {}
   return (
     <div>

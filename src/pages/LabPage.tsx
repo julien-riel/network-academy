@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { scenarioById, scenarios } from '../content'
 import { ConceptChips, Empty, Prose } from '../components/common'
 import { recordAnswer, recordLabDone } from '../engine/progress'
+import { seedOf, shuffle } from '../engine/recommend'
 
 /** Troubleshooting engine: symptom → choose where to look → feedback → reasoning chain. */
 export default function LabPage() {
@@ -12,6 +13,10 @@ export default function LabPage() {
   const [picked, setPicked] = useState<number | null>(null)
   const [score, setScore] = useState(0)
   const [finished, setFinished] = useState(false)
+  const order = useMemo(
+    () => (s ? shuffle(s.steps[stepIdx].choices.map((_, i) => i), seedOf(`${s.id}-${stepIdx}`)) : []),
+    [s, stepIdx],
+  )
   if (!s) return <Empty>Lab introuvable.</Empty>
 
   const step = s.steps[stepIdx]
@@ -58,7 +63,8 @@ export default function LabPage() {
             Étape {stepIdx + 1} / {s.steps.length}
           </div>
           <h2>{step.prompt}</h2>
-          {step.choices.map((c, i) => {
+          {order.map((i, pos) => {
+            const c = step.choices[i]
             let cls = 'choice'
             if (picked != null) {
               if (c.correct) cls += ' correct'
@@ -66,7 +72,7 @@ export default function LabPage() {
             }
             return (
               <button key={i} className={cls} onClick={() => pick(i)} disabled={picked != null}>
-                <span className="k">{'ABCDEF'[i]}</span>
+                <span className="k">{'ABCDEF'[pos]}</span>
                 <span>{c.label}</span>
               </button>
             )

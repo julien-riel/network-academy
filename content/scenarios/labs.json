@@ -4,29 +4,66 @@
     "order": 1,
     "title": "Voit le SSID, ne peut pas se connecter",
     "difficulty": 1,
-    "concepts": ["association", "wifi", "dhcp", "troubleshooting"],
+    "concepts": [
+      "association",
+      "wifi",
+      "dhcp",
+      "troubleshooting"
+    ],
     "symptom": "Le téléphone voit le SSID mais ne peut pas s’y connecter.",
-    "facts": ["SSID Corporate visible dans la liste des réseaux", "Le téléphone affiche « Impossible de rejoindre le réseau »", "Autres téléphones : OK sur le même SSID"],
+    "facts": [
+      "SSID Corporate visible dans la liste des réseaux",
+      "Le téléphone affiche « Impossible de rejoindre le réseau »",
+      "Autres téléphones : OK sur le même SSID"
+    ],
     "steps": [
       {
         "prompt": "Où commencer ?",
         "choices": [
-          { "label": "DHCP", "feedback": "Trop tôt : le client n’a pas encore obtenu l’accès couche 2. DHCP ne peut même pas commencer." },
-          { "label": "Association / authentification Wi-Fi", "correct": true, "feedback": "Oui. « Voir » le SSID prouve seulement la radio. L’échec est à l’association 802.11 ou à la sécurité qui suit (PSK erronée, 802.1X, bande incompatible, MAC filtrée)." },
-          { "label": "DNS", "feedback": "DNS vient bien plus tard, après l’IP. Le client n’a rien de tout ça." },
-          { "label": "NAT", "feedback": "NAT concerne la sortie vers Internet. On n’en est pas là." }
+          {
+            "label": "NAT sur le routeur de sortie",
+            "feedback": "NAT concerne la sortie vers Internet. On n’en est pas là."
+          },
+          {
+            "label": "Association ou authentification Wi-Fi",
+            "correct": true,
+            "feedback": "Oui. « Voir » le SSID prouve seulement la radio. L’échec est à l’association 802.11 ou à la sécurité qui suit (PSK erronée, 802.1X, bande incompatible, MAC filtrée)."
+          },
+          {
+            "label": "Attribution DHCP dans le VLAN",
+            "feedback": "Trop tôt : le client n’a pas encore obtenu l’accès couche 2. DHCP ne peut même pas commencer."
+          },
+          {
+            "label": "Résolution DNS côté client",
+            "feedback": "DNS vient bien plus tard, après l’IP. Le client n’a rien de tout ça."
+          }
         ]
       },
       {
         "prompt": "Les autres téléphones fonctionnent. Qu’est-ce que cela suggère ?",
         "choices": [
-          { "label": "Un problème propre à ce client : identifiants, profil, bande/standard non supporté, certificat non approuvé", "correct": true, "feedback": "Exact. Un problème global (AP, RADIUS down, VLAN) toucherait tout le monde. Regarder les événements de ce client sur l’AP." },
-          { "label": "Le serveur RADIUS est down", "feedback": "Si RADIUS était down, tous les clients Enterprise échoueraient." },
-          { "label": "Le VLAN est mal mappé", "feedback": "Un mauvais VLAN donnerait une mauvaise IP ou pas d’IP — mais le client serait « connecté »." }
+          {
+            "label": "Le VLAN est mal mappé : ce client a reçu une adresse du mauvais réseau et l’OS la refuse",
+            "feedback": "Un mauvais VLAN donnerait une mauvaise IP ou pas d’IP — mais le client serait « connecté »."
+          },
+          {
+            "label": "Un problème propre à ce client : identifiants, profil, bande non supportée, certificat non approuvé",
+            "correct": true,
+            "feedback": "Exact. Un problème global (AP, RADIUS down, VLAN) toucherait tout le monde. Regarder les événements de ce client sur l’AP."
+          },
+          {
+            "label": "Le serveur RADIUS est down : ce client est simplement le premier à réessayer depuis la panne",
+            "feedback": "Si RADIUS était down, tous les clients Enterprise échoueraient."
+          }
         ]
       }
     ],
-    "reasoning": ["SSID visible → radio (L1) ✓", "Connexion refusée → association ou authentification (L2) ✗", "Autres clients OK → cause locale au client", "Regarder : événements client sur l’AP (assoc reject ? EAP failure ? PSK mismatch ?)"],
+    "reasoning": [
+      "SSID visible → radio (L1) ✓",
+      "Connexion refusée → association ou authentification (L2) ✗",
+      "Autres clients OK → cause locale au client",
+      "Regarder : événements client sur l’AP (assoc reject ? EAP failure ? PSK mismatch ?)"
+    ],
     "takeaway": "Commencer avant DHCP. Le client n’a même pas encore obtenu l’accès Layer 2."
   },
   {
@@ -34,36 +71,81 @@
     "order": 2,
     "title": "Connecté mais 169.254.x.x",
     "difficulty": 1,
-    "concepts": ["dhcp", "vlan", "trunk", "troubleshooting"],
+    "concepts": [
+      "dhcp",
+      "vlan",
+      "trunk",
+      "troubleshooting"
+    ],
     "symptom": "Le client se connecte au SSID mais reçoit 169.254.x.x.",
-    "facts": ["Le téléphone indique « Connecté, pas d’Internet »", "Adresse IP : 169.254.41.7", "Bon signal (RSSI −58 dBm)"],
+    "facts": [
+      "Le téléphone indique « Connecté, pas d’Internet »",
+      "Adresse IP : 169.254.41.7",
+      "Bon signal (RSSI −58 dBm)"
+    ],
     "steps": [
       {
         "prompt": "Que signifie 169.254.x.x ?",
         "choices": [
-          { "label": "Aucun serveur DHCP n’a répondu : adresse auto-attribuée (APIPA)", "correct": true, "feedback": "Oui. Le Discover est parti, aucune Offer n’est revenue." },
-          { "label": "C’est l’adresse normale du réseau Guest", "feedback": "Non : 169.254.0.0/16 est réservé à l’auto-configuration en l’absence de DHCP." },
-          { "label": "Le DNS est mal configuré", "feedback": "DNS n’a rien à voir avec l’attribution de l’adresse." }
+          {
+            "label": "Aucun serveur DHCP n’a répondu : adresse auto-attribuée (APIPA)",
+            "correct": true,
+            "feedback": "Oui. Le Discover est parti, aucune Offer n’est revenue."
+          },
+          {
+            "label": "L’adresse normale du réseau Guest : la plage 169.254.0.0/16 lui est réservée",
+            "feedback": "Non : 169.254.0.0/16 est réservé à l’auto-configuration en l’absence de DHCP."
+          },
+          {
+            "label": "Le DNS a échoué : le client a reçu l’adresse de secours prévue par DHCP",
+            "feedback": "DNS n’a rien à voir avec l’attribution de l’adresse."
+          }
         ]
       },
       {
         "prompt": "Quel raisonnement ?",
         "choices": [
-          { "label": "Wi-Fi OK → couche 2 partiellement OK → DHCP suspect → vérifier aussi le VLAN", "correct": true, "feedback": "Exactement. L’association et la sécurité ont réussi. Le broadcast DHCP n’atteint pas de serveur : VLAN absent du trunk, mapping SSID → VLAN, serveur DHCP down ou scope plein." },
-          { "label": "Signal faible → changer de canal", "feedback": "Le RSSI est excellent. Ce n’est pas un problème radio." },
-          { "label": "RADIUS a refusé le client", "feedback": "Un refus RADIUS empêcherait la connexion elle-même. Ici le client est connecté." }
+          {
+            "label": "Signal faible → le Discover n’atteint pas l’AP → changer de canal ou augmenter la puissance",
+            "feedback": "Le RSSI est excellent. Ce n’est pas un problème radio."
+          },
+          {
+            "label": "Wi-Fi OK → couche 2 partiellement OK → DHCP suspect → vérifier aussi le VLAN",
+            "correct": true,
+            "feedback": "Exactement. L’association et la sécurité ont réussi. Le broadcast DHCP n’atteint pas de serveur : VLAN absent du trunk, mapping SSID → VLAN, serveur DHCP down ou scope plein."
+          },
+          {
+            "label": "RADIUS a refusé le client → l’AP l’a associé mais bloque son trafic DHCP",
+            "feedback": "Un refus RADIUS empêcherait la connexion elle-même. Ici le client est connecté."
+          }
         ]
       },
       {
         "prompt": "Le problème touche tous les clients d’un seul AP. Où regarder ?",
         "choices": [
-          { "label": "Le port du switch de cet AP (trunk, VLAN autorisés)", "correct": true, "feedback": "Oui : un seul AP → son raccordement filaire. Un scope DHCP plein ou un serveur down toucherait tous les AP." },
-          { "label": "Le serveur DHCP", "feedback": "Un serveur DHCP en panne toucherait tous les AP de ce VLAN." },
-          { "label": "Le contrôleur cloud", "feedback": "Le cloud ne participe pas au DHCP (data plane)." }
+          {
+            "label": "Le contrôleur cloud (configuration non poussée)",
+            "feedback": "Le cloud ne participe pas au DHCP (data plane)."
+          },
+          {
+            "label": "Le serveur DHCP (scope plein ou service arrêté)",
+            "feedback": "Un serveur DHCP en panne toucherait tous les AP de ce VLAN."
+          },
+          {
+            "label": "Le port du switch de cet AP (trunk, VLAN autorisés)",
+            "correct": true,
+            "feedback": "Oui : un seul AP → son raccordement filaire. Un scope DHCP plein ou un serveur down toucherait tous les AP."
+          }
         ]
       }
     ],
-    "reasoning": ["Wi-Fi probablement OK", "Layer 2 probablement partiellement OK", "DHCP suspect", "Vérifier VLAN également (mapping SSID → VLAN, trunk vers l’AP)", "Un seul AP touché → port du switch de cet AP"],
+    "reasoning": [
+      "Wi-Fi probablement OK",
+      "Layer 2 probablement partiellement OK",
+      "DHCP suspect",
+      "Vérifier VLAN également (mapping SSID → VLAN, trunk vers l’AP)",
+      "Un seul AP touché → port du switch de cet AP"
+    ],
     "takeaway": "169.254.x.x = le Discover n’a trouvé personne. Penser VLAN avant de blâmer le serveur DHCP."
   },
   {
@@ -71,29 +153,65 @@
     "order": 3,
     "title": "Ping 8.8.8.8 OK, google.com KO",
     "difficulty": 1,
-    "concepts": ["dns", "icmp", "dhcp"],
+    "concepts": [
+      "dns",
+      "icmp",
+      "dhcp"
+    ],
     "symptom": "IP obtenue. Ping 8.8.8.8 fonctionne. google.com ne fonctionne pas.",
-    "facts": ["IP 10.20.0.117/24, gateway 10.20.0.1", "ping 8.8.8.8 : 4 réponses", "Navigateur : DNS_PROBE_FINISHED_NXDOMAIN"],
+    "facts": [
+      "IP 10.20.0.117/24, gateway 10.20.0.1",
+      "ping 8.8.8.8 : 4 réponses",
+      "Navigateur : DNS_PROBE_FINISHED_NXDOMAIN"
+    ],
     "steps": [
       {
         "prompt": "Où est le problème ?",
         "choices": [
-          { "label": "DNS", "correct": true, "feedback": "La connectivité IP jusqu’à Internet est prouvée. Seule la résolution des noms échoue." },
-          { "label": "NAT", "feedback": "Le ping vers une IP publique passe : le NAT fonctionne." },
-          { "label": "DHCP", "feedback": "L’IP et la gateway sont bonnes. DHCP a fait son travail — sauf peut-être l’option DNS qu’il a distribuée." },
-          { "label": "Association Wi-Fi", "feedback": "Le client est bien au-delà de la couche 2." }
+          {
+            "label": "DNS",
+            "correct": true,
+            "feedback": "La connectivité IP jusqu’à Internet est prouvée. Seule la résolution des noms échoue."
+          },
+          {
+            "label": "Association Wi-Fi",
+            "feedback": "Le client est bien au-delà de la couche 2."
+          },
+          {
+            "label": "NAT",
+            "feedback": "Le ping vers une IP publique passe : le NAT fonctionne."
+          },
+          {
+            "label": "DHCP",
+            "feedback": "L’IP et la gateway sont bonnes. DHCP a fait son travail — sauf peut-être l’option DNS qu’il a distribuée."
+          }
         ]
       },
       {
         "prompt": "D’où vient l’adresse du résolveur DNS du client ?",
         "choices": [
-          { "label": "De l’Ack DHCP", "correct": true, "feedback": "Oui. Vérifier quel résolveur a été distribué, et s’il est joignable depuis ce VLAN (pare-feu inter-VLAN, résolveur down)." },
-          { "label": "Du beacon de l’AP", "feedback": "Le beacon ne transporte aucune info IP." },
-          { "label": "Du serveur RADIUS", "feedback": "RADIUS peut attribuer un VLAN, pas un résolveur DNS." }
+          {
+            "label": "Du beacon de l’AP",
+            "feedback": "Le beacon ne transporte aucune info IP."
+          },
+          {
+            "label": "De l’Ack DHCP",
+            "correct": true,
+            "feedback": "Oui. Vérifier quel résolveur a été distribué, et s’il est joignable depuis ce VLAN (pare-feu inter-VLAN, résolveur down)."
+          },
+          {
+            "label": "De l’Access-Accept RADIUS",
+            "feedback": "RADIUS peut attribuer un VLAN, pas un résolveur DNS."
+          }
         ]
       }
     ],
-    "reasoning": ["IP ✓ (DHCP)", "Gateway ✓, Internet ✓ (ping IP publique)", "Nom ✗ → DNS", "Vérifier : résolveur distribué par DHCP, joignable depuis ce VLAN ?"],
+    "reasoning": [
+      "IP ✓ (DHCP)",
+      "Gateway ✓, Internet ✓ (ping IP publique)",
+      "Nom ✗ → DNS",
+      "Vérifier : résolveur distribué par DHCP, joignable depuis ce VLAN ?"
+    ],
     "takeaway": "Le test en trois pings (gateway, IP publique, nom) isole DNS en 30 secondes."
   },
   {
@@ -101,37 +219,85 @@
     "order": 4,
     "title": "Enterprise échoue avant l’IP",
     "difficulty": 2,
-    "concepts": ["8021x", "eap", "radius", "certificates"],
+    "concepts": [
+      "8021x",
+      "eap",
+      "radius",
+      "certificates"
+    ],
     "symptom": "WPA2-Enterprise échoue avant l’obtention d’une IP.",
-    "facts": ["SSID Corporate (WPA2-Enterprise, PEAP)", "Événements client : associated → EAP started → timeout", "SSID Guest (PSK) fonctionne sur le même AP"],
+    "facts": [
+      "SSID Corporate (WPA2-Enterprise, PEAP)",
+      "Événements client : associated → EAP started → timeout",
+      "SSID Guest (PSK) fonctionne sur le même AP"
+    ],
     "steps": [
       {
         "prompt": "Où regarder en premier ?",
         "choices": [
-          { "label": "802.1X / EAP / certificat / RADIUS", "correct": true, "feedback": "Oui. En Enterprise, tout se joue avant l’IP. DHCP n’a pas encore commencé." },
-          { "label": "DHCP", "feedback": "Pas DHCP en premier : le port n’est même pas ouvert au trafic IP." },
-          { "label": "DNS", "feedback": "Encore plus loin dans la chaîne." },
-          { "label": "La radio", "feedback": "L’association a réussi et Guest fonctionne sur le même AP : la radio est hors de cause." }
+          {
+            "label": "802.1X / EAP / certificat / RADIUS",
+            "correct": true,
+            "feedback": "Oui. En Enterprise, tout se joue avant l’IP. DHCP n’a pas encore commencé."
+          },
+          {
+            "label": "Radio : canal et puissance",
+            "feedback": "L’association a réussi et Guest fonctionne sur le même AP : la radio est hors de cause."
+          },
+          {
+            "label": "DNS et résolveur d’entreprise",
+            "feedback": "Encore plus loin dans la chaîne."
+          },
+          {
+            "label": "DHCP et scope du VLAN Corporate",
+            "feedback": "Pas DHCP en premier : le port n’est même pas ouvert au trafic IP."
+          }
         ]
       },
       {
         "prompt": "« EAP started → timeout » (pas de Reject). Qu’est-ce que cela indique ?",
         "choices": [
-          { "label": "Le serveur RADIUS ne répond pas à l’AP : injoignable, pare-feu UDP 1812, secret partagé incorrect (paquets ignorés), mauvaise IP de serveur", "correct": true, "feedback": "Exact. Un Reject serait une décision négative ; un timeout est un silence. RADIUS est en UDP : l’AP attend puis abandonne." },
-          { "label": "Le mot de passe de l’utilisateur est faux", "feedback": "Un mauvais mot de passe produit un Access-Reject, pas un timeout." },
-          { "label": "Le VLAN est absent du trunk", "feedback": "Le VLAN n’intervient qu’après l’Accept." }
+          {
+            "label": "Le serveur RADIUS ne répond pas à l’AP : injoignable, pare-feu UDP 1812, secret partagé, mauvaise IP",
+            "correct": true,
+            "feedback": "Exact. Un Reject serait une décision négative ; un timeout est un silence. RADIUS est en UDP : l’AP attend puis abandonne."
+          },
+          {
+            "label": "Le VLAN est absent du trunk : l’AP ne peut pas acheminer l’Access-Request vers le serveur",
+            "feedback": "Le VLAN n’intervient qu’après l’Accept."
+          },
+          {
+            "label": "Le mot de passe de l’utilisateur est faux : le serveur ignore les tentatives erronées sans répondre",
+            "feedback": "Un mauvais mot de passe produit un Access-Reject, pas un timeout."
+          }
         ]
       },
       {
         "prompt": "Quel outil tranche entre « RADIUS down » et « chemin bloqué » ?",
         "choices": [
-          { "label": "PCAP sur l’interface Ethernet de l’AP : l’Access-Request part-il ? Une réponse revient-elle ?", "correct": true, "feedback": "Oui. Si la requête part et rien ne revient, le chemin (pare-feu, routage) ou le secret partagé est en cause." },
-          { "label": "Redémarrer le contrôleur cloud", "feedback": "Le cloud ne participe pas à l’échange RADIUS." },
-          { "label": "Changer le canal", "feedback": "Le problème n’est pas radio." }
+          {
+            "label": "Changement de canal : une interférence peut retarder les réponses RADIUS au-delà du timeout",
+            "feedback": "Le problème n’est pas radio."
+          },
+          {
+            "label": "Redémarrage du contrôleur cloud : il réinitialise les sessions RADIUS de tous les AP du site",
+            "feedback": "Le cloud ne participe pas à l’échange RADIUS."
+          },
+          {
+            "label": "PCAP sur l’interface Ethernet de l’AP : l’Access-Request part-il ? une réponse revient-elle ?",
+            "correct": true,
+            "feedback": "Oui. Si la requête part et rien ne revient, le chemin (pare-feu, routage) ou le secret partagé est en cause."
+          }
         ]
       }
     ],
-    "reasoning": ["Association ✓ (L2)", "Guest/PSK OK → radio et AP ✓", "EAP timeout → RADIUS silencieux (pas Reject)", "Suspects : joignabilité UDP 1812, secret partagé, IP du serveur", "Trancher avec une capture sur l’AP"],
+    "reasoning": [
+      "Association ✓ (L2)",
+      "Guest/PSK OK → radio et AP ✓",
+      "EAP timeout → RADIUS silencieux (pas Reject)",
+      "Suspects : joignabilité UDP 1812, secret partagé, IP du serveur",
+      "Trancher avec une capture sur l’AP"
+    ],
     "takeaway": "Regarder 802.1X, EAP, certificat, RADIUS. Pas DHCP en premier. Timeout ≠ Reject."
   },
   {
@@ -139,29 +305,66 @@
     "order": 5,
     "title": "Guest reçoit des IP Corporate",
     "difficulty": 2,
-    "concepts": ["vlan", "ssid", "dhcp", "trunk"],
+    "concepts": [
+      "vlan",
+      "ssid",
+      "dhcp",
+      "trunk"
+    ],
     "symptom": "Les utilisateurs du SSID Guest reçoivent des IP du réseau Corporate.",
-    "facts": ["Guest attendu : 10.20.0.0/24 (VLAN 20)", "Clients Guest observés : 10.10.0.x (VLAN 10 = Corporate)", "Le problème est apparu après un changement de profil sur le site"],
+    "facts": [
+      "Guest attendu : 10.20.0.0/24 (VLAN 20)",
+      "Clients Guest observés : 10.10.0.x (VLAN 10 = Corporate)",
+      "Le problème est apparu après un changement de profil sur le site"
+    ],
     "steps": [
       {
         "prompt": "Suspect principal ?",
         "choices": [
-          { "label": "Mapping SSID → VLAN : Guest est placé dans le VLAN Corporate", "correct": true, "feedback": "Oui. Le Wi-Fi fonctionne, DHCP fonctionne — mais dans le mauvais VLAN. Le broadcast DHCP a atteint le scope 10.10.0.0/24." },
-          { "label": "Serveur RADIUS", "feedback": "Guest est un SSID ouvert/PSK : RADIUS n’intervient pas (sauf VLAN dynamique, à vérifier)." },
-          { "label": "Signal radio", "feedback": "Une IP du mauvais réseau n’est jamais un problème radio." },
-          { "label": "DNS", "feedback": "DNS n’attribue pas d’adresse IP." }
+          {
+            "label": "DNS : le résolveur répond avec des adresses du réseau Corporate",
+            "feedback": "DNS n’attribue pas d’adresse IP."
+          },
+          {
+            "label": "Signal radio : les invités s’associent au SSID Corporate par erreur",
+            "feedback": "Une IP du mauvais réseau n’est jamais un problème radio."
+          },
+          {
+            "label": "Mapping SSID → VLAN : Guest est placé dans le VLAN Corporate",
+            "correct": true,
+            "feedback": "Oui. Le Wi-Fi fonctionne, DHCP fonctionne — mais dans le mauvais VLAN. Le broadcast DHCP a atteint le scope 10.10.0.0/24."
+          },
+          {
+            "label": "Serveur RADIUS : il renvoie le VLAN Corporate aux clients invités",
+            "feedback": "Guest est un SSID ouvert/PSK : RADIUS n’intervient pas (sauf VLAN dynamique, à vérifier)."
+          }
         ]
       },
       {
         "prompt": "Quel autre point de la chaîne peut produire le même symptôme ?",
         "choices": [
-          { "label": "Le native VLAN du trunk : si l’AP envoie Guest sans tag et que le native VLAN du port est 10", "correct": true, "feedback": "Exact. Une trame untagged atterrit dans le native VLAN du port. Toujours vérifier les deux côtés du trunk." },
-          { "label": "Le bail DHCP trop court", "feedback": "La durée du bail ne change pas le réseau d’origine de l’adresse." },
-          { "label": "Le canal 2.4 GHz", "feedback": "Rien à voir." }
+          {
+            "label": "Le native VLAN du trunk : si l’AP envoie Guest sans tag et que le native VLAN du port est 10",
+            "correct": true,
+            "feedback": "Exact. Une trame untagged atterrit dans le native VLAN du port. Toujours vérifier les deux côtés du trunk."
+          },
+          {
+            "label": "Le canal 2.4 GHz : les clients Guest en 2.4 GHz sont placés dans le VLAN de la radio",
+            "feedback": "Rien à voir."
+          },
+          {
+            "label": "Le bail DHCP trop court : à l’expiration, le client reçoit une adresse du scope voisin",
+            "feedback": "La durée du bail ne change pas le réseau d’origine de l’adresse."
+          }
         ]
       }
     ],
-    "reasoning": ["Association ✓, DHCP ✓ → mais mauvais scope", "Le Discover a été diffusé dans le VLAN 10", "Cause : SSID Guest → VLAN 10 (profil), ou trames untagged + native VLAN 10 sur le trunk", "Corriger le mapping SSID → VLAN, vérifier le trunk (OpenLAN)"],
+    "reasoning": [
+      "Association ✓, DHCP ✓ → mais mauvais scope",
+      "Le Discover a été diffusé dans le VLAN 10",
+      "Cause : SSID Guest → VLAN 10 (profil), ou trames untagged + native VLAN 10 sur le trunk",
+      "Corriger le mapping SSID → VLAN, vérifier le trunk (OpenLAN)"
+    ],
     "takeaway": "VLAN / configuration SSID → VLAN. Une IP du mauvais réseau = un problème de mapping, jamais de radio."
   },
   {
@@ -169,36 +372,80 @@
     "order": 6,
     "title": "AP fonctionnel mais « disconnected » au cloud",
     "difficulty": 2,
-    "concepts": ["control-plane", "data-plane", "ucentral", "ztp"],
+    "concepts": [
+      "control-plane",
+      "data-plane",
+      "ucentral",
+      "ztp"
+    ],
     "symptom": "L’AP fonctionne pour les clients, mais n’apparaît plus connecté au cloud.",
-    "facts": ["Console : AP « disconnected » depuis 20 min", "Clients associés : 37, trafic normal", "Aucun ticket utilisateur"],
+    "facts": [
+      "Console : AP « disconnected » depuis 20 min",
+      "Clients associés : 37, trafic normal",
+      "Aucun ticket utilisateur"
+    ],
     "steps": [
       {
         "prompt": "Quel concept explique cette situation ?",
         "choices": [
-          { "label": "Le data plane fonctionne alors que le control plane est brisé", "correct": true, "feedback": "Oui. L’AP garde sa dernière configuration et continue de servir ses clients ; seule la connexion uCentral vers le Gateway est coupée." },
-          { "label": "Les clients vont perdre Internet d’une minute à l’autre", "feedback": "Non : le trafic utilisateur ne transite pas par le cloud (local breakout)." },
-          { "label": "L’AP est en panne matérielle", "feedback": "Il sert 37 clients : il est bien vivant." }
+          {
+            "label": "Les clients vont perdre Internet d’ici quelques secondes",
+            "feedback": "Non : le trafic utilisateur ne transite pas par le cloud (local breakout)."
+          },
+          {
+            "label": "Le data plane fonctionne alors que le control plane est brisé",
+            "correct": true,
+            "feedback": "Oui. L’AP garde sa dernière configuration et continue de servir ses clients ; seule la connexion uCentral vers le Gateway est coupée."
+          },
+          {
+            "label": "L’AP est en panne matérielle et sert ses clients par inertie",
+            "feedback": "Il sert 37 clients : il est bien vivant."
+          }
         ]
       },
       {
         "prompt": "Où chercher la cause ?",
         "choices": [
-          { "label": "La sortie du VLAN de management vers le Gateway : DNS du gateway, pare-feu (WebSocket TLS sortant), NTP/certificat, ou incident côté cloud", "correct": true, "feedback": "Exact. Tout ce dont uCentral a besoin : IP de management, résolution du nom du Gateway, sortie TLS, heure juste." },
-          { "label": "Le VLAN des clients", "feedback": "Les clients fonctionnent : leur VLAN est OK." },
-          { "label": "Le serveur RADIUS", "feedback": "RADIUS ne participe pas à la connexion AP ↔ cloud." }
+          {
+            "label": "Le serveur RADIUS : l’AP doit s’y authentifier avant de pouvoir ouvrir sa session uCentral",
+            "feedback": "RADIUS ne participe pas à la connexion AP ↔ cloud."
+          },
+          {
+            "label": "Le VLAN des clients : un mauvais tag empêche l’AP d’atteindre le Gateway par le même chemin que le trafic",
+            "feedback": "Les clients fonctionnent : leur VLAN est OK."
+          },
+          {
+            "label": "La sortie du VLAN de management vers le Gateway : DNS, pare-feu (WebSocket TLS sortant), NTP/certificat, incident cloud",
+            "correct": true,
+            "feedback": "Exact. Tout ce dont uCentral a besoin : IP de management, résolution du nom du Gateway, sortie TLS, heure juste."
+          }
         ]
       },
       {
         "prompt": "Qu’est-ce qui ne fonctionnera PAS tant que le control plane est coupé ?",
         "choices": [
-          { "label": "Changer la configuration, voir la télémétrie, lancer une capture, mettre à jour le firmware", "correct": true, "feedback": "Oui : tout ce qui passe par uCentral. Le forwarding, lui, continue." },
-          { "label": "Le DHCP des clients", "feedback": "DHCP est local au site (data plane)." },
-          { "label": "L’authentification RADIUS", "feedback": "RADIUS est entre l’AP et le serveur AAA, pas via le cloud." }
+          {
+            "label": "Changer la configuration, voir la télémétrie, lancer une capture, mettre à jour le firmware",
+            "correct": true,
+            "feedback": "Oui : tout ce qui passe par uCentral. Le forwarding, lui, continue."
+          },
+          {
+            "label": "Le DHCP des clients, dont les baux sont validés par le contrôleur cloud",
+            "feedback": "DHCP est local au site (data plane)."
+          },
+          {
+            "label": "L’authentification RADIUS, relayée par le contrôleur vers le serveur AAA",
+            "feedback": "RADIUS est entre l’AP et le serveur AAA, pas via le cloud."
+          }
         ]
       }
     ],
-    "reasoning": ["Clients OK → data plane ✓", "AP disconnected → control plane ✗ (uCentral)", "Le cloud ne transporte pas le trafic (local breakout)", "Vérifier : IP mgmt, DNS du Gateway, sortie TLS/WebSocket, NTP, statut du cloud"],
+    "reasoning": [
+      "Clients OK → data plane ✓",
+      "AP disconnected → control plane ✗ (uCentral)",
+      "Le cloud ne transporte pas le trafic (local breakout)",
+      "Vérifier : IP mgmt, DNS du Gateway, sortie TLS/WebSocket, NTP, statut du cloud"
+    ],
     "takeaway": "Data plane peut fonctionner alors que Control plane est brisé. Excellent exercice pour OpenWiFi."
   },
   {
@@ -206,28 +453,62 @@
     "order": 7,
     "title": "Tous les employés bloqués depuis 10 h 15",
     "difficulty": 2,
-    "concepts": ["radius", "8021x", "psk", "events"],
+    "concepts": [
+      "radius",
+      "8021x",
+      "psk",
+      "events"
+    ],
     "symptom": "Depuis 10 h 15, plus aucun employé ne peut rejoindre le SSID Corporate. Le SSID Guest fonctionne.",
-    "facts": ["Corporate : WPA3-Enterprise", "Guest : WPA2-PSK, même AP, fonctionne", "Événements : EAP started → timeout, sur tous les AP du site"],
+    "facts": [
+      "Corporate : WPA3-Enterprise",
+      "Guest : WPA2-PSK, même AP, fonctionne",
+      "Événements : EAP started → timeout, sur tous les AP du site"
+    ],
     "steps": [
       {
         "prompt": "Suspect n°1 ?",
         "choices": [
-          { "label": "La chaîne RADIUS : serveur down, injoignable depuis le site, secret partagé ou certificat modifié", "correct": true, "feedback": "Symptôme massif, simultané, limité aux SSID 802.1X, sur tous les AP → cause commune côté RADIUS." },
-          { "label": "Le DHCP", "feedback": "Guest a des IP : DHCP fonctionne. Et l’échec est avant l’IP." },
-          { "label": "Un problème radio", "feedback": "Guest fonctionne sur les mêmes radios." },
-          { "label": "Le contrôleur cloud", "feedback": "Le cloud ne participe pas à l’échange RADIUS. Si le cloud tombait, les clients continueraient." }
+          {
+            "label": "Le DHCP du VLAN Corporate : scope saturé depuis l’arrivée des employés ce matin",
+            "feedback": "Guest a des IP : DHCP fonctionne. Et l’échec est avant l’IP."
+          },
+          {
+            "label": "La chaîne RADIUS : serveur down, injoignable, secret partagé ou certificat modifié",
+            "correct": true,
+            "feedback": "Symptôme massif, simultané, limité aux SSID 802.1X, sur tous les AP → cause commune côté RADIUS."
+          },
+          {
+            "label": "Le contrôleur cloud : le profil Corporate a été retiré des AP à 10 h 15",
+            "feedback": "Le cloud ne participe pas à l’échange RADIUS. Si le cloud tombait, les clients continueraient."
+          },
+          {
+            "label": "Un problème radio 5 GHz : Corporate y est diffusé, Guest reste en 2.4 GHz",
+            "feedback": "Guest fonctionne sur les mêmes radios."
+          }
         ]
       },
       {
         "prompt": "« Timeout sur tous les AP » plutôt que « Reject ». Qu’est-ce que cela précise ?",
         "choices": [
-          { "label": "Le serveur ne répond pas du tout : panne, pare-feu, routage, ou secret partagé (paquets ignorés silencieusement)", "correct": true, "feedback": "Un changement à 10 h 15 (règle de pare-feu, migration du serveur, rotation du secret) est à chercher." },
-          { "label": "Les mots de passe ont expiré", "feedback": "Des mots de passe expirés donneraient des Reject, pas des timeouts." }
+          {
+            "label": "Les mots de passe ont expiré : le serveur ignore les tentatives erronées sans répondre",
+            "feedback": "Des mots de passe expirés donneraient des Reject, pas des timeouts."
+          },
+          {
+            "label": "Le serveur ne répond pas du tout : panne, pare-feu, routage, ou secret partagé (paquets ignorés)",
+            "correct": true,
+            "feedback": "Un changement à 10 h 15 (règle de pare-feu, migration du serveur, rotation du secret) est à chercher."
+          }
         ]
       }
     ],
-    "reasoning": ["Guest (PSK) OK → radio, AP, DHCP ✓", "Corporate (802.1X) KO partout, simultanément → dépendance commune : RADIUS", "Timeout (pas Reject) → serveur silencieux : down / pare-feu / secret", "Chercher ce qui a changé à 10 h 15"],
+    "reasoning": [
+      "Guest (PSK) OK → radio, AP, DHCP ✓",
+      "Corporate (802.1X) KO partout, simultanément → dépendance commune : RADIUS",
+      "Timeout (pas Reject) → serveur silencieux : down / pare-feu / secret",
+      "Chercher ce qui a changé à 10 h 15"
+    ],
     "takeaway": "Un symptôme massif et simultané pointe vers une dépendance partagée. Le SSID PSK qui fonctionne isole RADIUS."
   },
   {
@@ -235,34 +516,72 @@
     "order": 8,
     "title": "Le portail invité ne s’affiche pas",
     "difficulty": 2,
-    "concepts": ["captive-portal", "dns", "coa", "mac-address"],
+    "concepts": [
+      "captive-portal",
+      "dns",
+      "coa",
+      "mac-address"
+    ],
     "symptom": "Sur le Wi-Fi invité, le téléphone a une IP mais le portail n’apparaît pas et aucun site ne s’ouvre.",
-    "facts": ["SSID Guest ouvert, IP 10.20.0.55", "Aucune fenêtre de portail", "Un collègue qui s’était connecté hier navigue normalement"],
+    "facts": [
+      "SSID Guest ouvert, IP 10.20.0.55",
+      "Aucune fenêtre de portail",
+      "Un collègue qui s’était connecté hier navigue normalement"
+    ],
     "steps": [
       {
         "prompt": "Le client est-il bloqué avant ou après DHCP ?",
         "choices": [
-          { "label": "Après : il a une IP, il est captif (walled garden) en attente d’autorisation", "correct": true, "feedback": "Oui. Le captive portal contrôle l’accès après que le client soit déjà sur le réseau." },
-          { "label": "Avant : l’association a échoué", "feedback": "Il a une IP : l’association et DHCP ont réussi." }
+          {
+            "label": "Avant : l’association a réussi mais le handshake bloque le trafic",
+            "feedback": "Il a une IP : l’association et DHCP ont réussi."
+          },
+          {
+            "label": "Après : il a une IP, il est captif (walled garden) en attente d’autorisation",
+            "correct": true,
+            "feedback": "Oui. Le captive portal contrôle l’accès après que le client soit déjà sur le réseau."
+          }
         ]
       },
       {
         "prompt": "Pourquoi le portail peut-il ne pas apparaître ?",
         "choices": [
-          { "label": "La détection échoue : DNS non résolu dans le walled garden, redirection absente, portail HTTPS injoignable ou certificat invalide", "correct": true, "feedback": "L’OS teste une URL connue ; s’il n’obtient aucune réponse (DNS bloqué) au lieu d’une redirection, il ne déclenche pas la fenêtre." },
-          { "label": "Le RSSI est trop faible", "feedback": "Le client a une IP et parle au réseau." },
-          { "label": "RADIUS Enterprise est down", "feedback": "Guest est ouvert ; l’autorisation du portail peut passer par RADIUS, mais l’affichage du portail n’en dépend pas." }
+          {
+            "label": "RADIUS Enterprise est down : le portail invité s’appuie sur le même serveur pour s’afficher",
+            "feedback": "Guest est ouvert ; l’autorisation du portail peut passer par RADIUS, mais l’affichage du portail n’en dépend pas."
+          },
+          {
+            "label": "Le RSSI est trop faible : l’OS n’ouvre la fenêtre du portail qu’au-dessus d’un seuil de signal",
+            "feedback": "Le client a une IP et parle au réseau."
+          },
+          {
+            "label": "La détection échoue : DNS non résolu dans le walled garden, redirection absente, portail HTTPS injoignable",
+            "correct": true,
+            "feedback": "L’OS teste une URL connue ; s’il n’obtient aucune réponse (DNS bloqué) au lieu d’une redirection, il ne déclenche pas la fenêtre."
+          }
         ]
       },
       {
         "prompt": "Le collègue d’hier navigue sans portail. Pourquoi ?",
         "choices": [
-          { "label": "Sa MAC est encore autorisée (session valide) ; le portail identifie les clients par MAC/IP", "correct": true, "feedback": "Oui. Et si son téléphone avait changé de MAC aléatoire, il aurait été re-captif." },
-          { "label": "Il est sur un autre VLAN", "feedback": "Même SSID, même VLAN." }
+          {
+            "label": "Il est sur un autre VLAN : les sessions d’hier ont été déplacées vers le réseau Corporate",
+            "feedback": "Même SSID, même VLAN."
+          },
+          {
+            "label": "Sa MAC est encore autorisée (session valide) ; le portail identifie les clients par MAC/IP",
+            "correct": true,
+            "feedback": "Oui. Et si son téléphone avait changé de MAC aléatoire, il aurait été re-captif."
+          }
         ]
       }
     ],
-    "reasoning": ["IP ✓ → L2/L3 OK", "Internet bloqué → captif (walled garden)", "Pas de fenêtre → détection/redirection : DNS ? portail joignable ? HTTPS ?", "Autorisation par MAC : sessions existantes non affectées"],
+    "reasoning": [
+      "IP ✓ → L2/L3 OK",
+      "Internet bloqué → captif (walled garden)",
+      "Pas de fenêtre → détection/redirection : DNS ? portail joignable ? HTTPS ?",
+      "Autorisation par MAC : sessions existantes non affectées"
+    ],
     "takeaway": "Captive portal = après DHCP. Séparer « le portail ne s’affiche pas » (détection) de « après login, toujours bloqué » (autorisation/CoA)."
   },
   {
@@ -270,27 +589,60 @@
     "order": 9,
     "title": "Accept avec VLAN 42, pas d’IP",
     "difficulty": 3,
-    "concepts": ["radius", "vlan", "dhcp", "trunk", "openlan"],
+    "concepts": [
+      "radius",
+      "vlan",
+      "dhcp",
+      "trunk",
+      "openlan"
+    ],
     "symptom": "Association OK, RADIUS Access-Accept OK (VLAN 42), mais le client n’a pas d’adresse IP.",
-    "facts": ["Événements : associated → EAP success → Access-Accept Tunnel-Private-Group-ID=42", "Client : 169.254.x.x", "Les utilisateurs qui reçoivent VLAN 10 fonctionnent"],
+    "facts": [
+      "Événements : associated → EAP success → Access-Accept Tunnel-Private-Group-ID=42",
+      "Client : 169.254.x.x",
+      "Les utilisateurs qui reçoivent VLAN 10 fonctionnent"
+    ],
     "steps": [
       {
         "prompt": "Que peut-on éliminer ?",
         "choices": [
-          { "label": "802.11 et l’authentification : validés. Le problème est en dessous de DHCP, côté VLAN", "correct": true, "feedback": "802.11 ✓ → authentification ✓ → probablement VLAN/DHCP → regarder le data plane." },
-          { "label": "Rien : RADIUS peut encore être en cause", "feedback": "RADIUS a répondu Accept avec un attribut. Il a fait son travail." }
+          {
+            "label": "802.11 et l’authentification : validés. Le problème est en dessous de DHCP, côté VLAN",
+            "correct": true,
+            "feedback": "802.11 ✓ → authentification ✓ → probablement VLAN/DHCP → regarder le data plane."
+          },
+          {
+            "label": "Rien : RADIUS peut encore être en cause, car l’Accept ne prouve pas que le VLAN est valide",
+            "feedback": "RADIUS a répondu Accept avec un attribut. Il a fait son travail."
+          }
         ]
       },
       {
         "prompt": "Où regarder ?",
         "choices": [
-          { "label": "Le VLAN 42 existe-t-il sur le switch ? Est-il autorisé sur le trunk vers l’AP ? Y a-t-il un scope DHCP pour ce VLAN ?", "correct": true, "feedback": "Oui : le VLAN dynamique renvoyé par RADIUS doit exister de bout en bout côté filaire — vérifiable depuis OpenLAN." },
-          { "label": "Le certificat du serveur RADIUS", "feedback": "L’échange EAP a réussi : le certificat est accepté." },
-          { "label": "La puissance de l’AP", "feedback": "Rien à voir avec l’IP." }
+          {
+            "label": "Le certificat du serveur RADIUS est-il approuvé ? Sa chaîne de confiance est-elle complète ?",
+            "feedback": "L’échange EAP a réussi : le certificat est accepté."
+          },
+          {
+            "label": "Le VLAN 42 existe-t-il sur le switch ? Est-il autorisé sur le trunk ? Y a-t-il un scope DHCP ?",
+            "correct": true,
+            "feedback": "Oui : le VLAN dynamique renvoyé par RADIUS doit exister de bout en bout côté filaire — vérifiable depuis OpenLAN."
+          },
+          {
+            "label": "La puissance de l’AP est-elle suffisante ? Le client a-t-il un SNR assez bon pour DHCP ?",
+            "feedback": "Rien à voir avec l’IP."
+          }
         ]
       }
     ],
-    "reasoning": ["802.11 ✓", "Authentification ✓ (Accept, VLAN 42)", "Pas d’IP → VLAN 42 / DHCP", "Data plane : VLAN 42 sur le switch ? sur le trunk ? scope DHCP ?", "Les clients VLAN 10 fonctionnent → le problème est spécifique au VLAN 42"],
+    "reasoning": [
+      "802.11 ✓",
+      "Authentification ✓ (Accept, VLAN 42)",
+      "Pas d’IP → VLAN 42 / DHCP",
+      "Data plane : VLAN 42 sur le switch ? sur le trunk ? scope DHCP ?",
+      "Les clients VLAN 10 fonctionnent → le problème est spécifique au VLAN 42"
+    ],
     "takeaway": "Le réflexe cible : 802.11 ✓ → authentification ✓ → probablement VLAN/DHCP → regarder le data plane, même sans connaître chaque détail du protocole."
   },
   {
@@ -298,34 +650,73 @@
     "order": 10,
     "title": "AP neuf jamais vu dans le cloud",
     "difficulty": 3,
-    "concepts": ["ztp", "dhcp", "dns", "ntp", "device-certificate", "poe"],
+    "concepts": [
+      "ztp",
+      "dhcp",
+      "dns",
+      "ntp",
+      "device-certificate",
+      "poe"
+    ],
     "symptom": "Un AP neuf, branché ce matin, n’apparaît jamais dans la console. Sa LED clignote.",
-    "facts": ["Modèle certifié OpenWiFi, ajouté à l’inventaire du tenant", "Port du switch : trunk, native VLAN 99 (management)", "Un AP identique sur le port voisin fonctionne"],
+    "facts": [
+      "Modèle certifié OpenWiFi, ajouté à l’inventaire du tenant",
+      "Port du switch : trunk, native VLAN 99 (management)",
+      "Un AP identique sur le port voisin fonctionne"
+    ],
     "steps": [
       {
         "prompt": "Quel est le premier maillon à vérifier pour l’onboarding ?",
         "choices": [
-          { "label": "L’AP obtient-il une IP par DHCP sur le VLAN de management ?", "correct": true, "feedback": "Sans IP, rien d’autre n’est possible : ni redirector, ni Gateway." },
-          { "label": "Le SSID est-il diffusé ?", "feedback": "Il n’a pas encore de configuration : aucun SSID n’est attendu." },
-          { "label": "RADIUS répond-il ?", "feedback": "RADIUS concerne les clients Wi-Fi, pas l’onboarding de l’AP." }
+          {
+            "label": "Le serveur RADIUS répond-il aux requêtes de cet AP ?",
+            "feedback": "RADIUS concerne les clients Wi-Fi, pas l’onboarding de l’AP."
+          },
+          {
+            "label": "Le SSID est-il diffusé sur les deux radios de l’AP ?",
+            "feedback": "Il n’a pas encore de configuration : aucun SSID n’est attendu."
+          },
+          {
+            "label": "L’AP obtient-il une IP par DHCP sur le VLAN de management ?",
+            "correct": true,
+            "feedback": "Sans IP, rien d’autre n’est possible : ni redirector, ni Gateway."
+          }
         ]
       },
       {
         "prompt": "L’AP a une IP. Ensuite ?",
         "choices": [
-          { "label": "DNS (résolution du redirector / gateway), sortie HTTPS-WebSocket autorisée, NTP/certificat, device bien enregistré", "correct": true, "feedback": "La chaîne ZTP : identité → réseau → découverte → connexion. Chaque maillon peut casser." },
-          { "label": "Le VLAN Guest", "feedback": "Les VLAN clients viennent avec la configuration, plus tard." }
+          {
+            "label": "Le VLAN Guest : l’AP doit pouvoir y placer un client test avant de s’annoncer",
+            "feedback": "Les VLAN clients viennent avec la configuration, plus tard."
+          },
+          {
+            "label": "DNS (redirector / gateway), sortie HTTPS-WebSocket, NTP/certificat, device enregistré",
+            "correct": true,
+            "feedback": "La chaîne ZTP : identité → réseau → découverte → connexion. Chaque maillon peut casser."
+          }
         ]
       },
       {
         "prompt": "L’AP voisin fonctionne sur la même config de port. Qu’est-ce que cela isole ?",
         "choices": [
-          { "label": "Le réseau du site est OK ; le problème est propre à ce device : serial mal saisi dans l’inventaire, certificat, firmware trop ancien, PoE marginal", "correct": true, "feedback": "Même port, même réseau, un seul AP en échec → regarder l’identité de ce device et son alimentation." },
-          { "label": "Le pare-feu du site", "feedback": "Le voisin passe par le même pare-feu." }
+          {
+            "label": "Le pare-feu du site : il n’autorise qu’un nombre limité de sessions WebSocket sortantes",
+            "feedback": "Le voisin passe par le même pare-feu."
+          },
+          {
+            "label": "Un problème propre à ce device : serial mal saisi, certificat, firmware trop ancien, PoE marginal",
+            "correct": true,
+            "feedback": "Même port, même réseau, un seul AP en échec → regarder l’identité de ce device et son alimentation."
+          }
         ]
       }
     ],
-    "reasoning": ["Onboarding = control plane : IP mgmt → DNS → sortie TLS → NTP → identité", "Voisin OK → réseau du site ✓", "Cause locale au device : inventaire (serial), certificat, firmware, PoE"],
+    "reasoning": [
+      "Onboarding = control plane : IP mgmt → DNS → sortie TLS → NTP → identité",
+      "Voisin OK → réseau du site ✓",
+      "Cause locale au device : inventaire (serial), certificat, firmware, PoE"
+    ],
     "takeaway": "Le ZTP est une chaîne comme la connexion d’un client : on la suit maillon par maillon, et un voisin qui fonctionne isole le device."
   }
 ]

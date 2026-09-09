@@ -66,6 +66,28 @@ describe('content integrity', () => {
     for (const r of references) for (const c of r.concepts) expect(conceptById.has(c), `${r.id} → ${c}`).toBe(true)
   })
 
+  it('does not give away the answer by position or length', () => {
+    const mc = questions.filter((q) => q.type === 'multiple-choice' || q.type === 'troubleshooting')
+    const atZero = mc.filter((q) => (q as { answer: number }).answer === 0).length
+    expect(atZero / mc.length, 'too many answers at index 0').toBeLessThan(0.5)
+    const ratio = (good: number, others: number[]) => good / (others.reduce((a, b) => a + b, 0) / others.length)
+    for (const q of mc) {
+      const a = (q as { answer: number }).answer
+      const c = (q as { choices: string[] }).choices
+      const r = ratio(c[a].length, c.filter((_, i) => i !== a).map((x) => x.length))
+      expect(r, `${q.id}: correct answer is ${r.toFixed(1)}x the length of distractors`).toBeLessThan(1.5)
+      expect(r, `${q.id}: correct answer is much shorter than distractors`).toBeGreaterThan(0.5)
+    }
+    for (const s of scenarios) {
+      for (const st of s.steps) {
+        const ci = st.choices.findIndex((x) => x.correct)
+        const r = ratio(st.choices[ci].label.length, st.choices.filter((_, i) => i !== ci).map((x) => x.label.length))
+        expect(r, `${s.id} "${st.prompt}": ${r.toFixed(1)}x`).toBeLessThan(1.5)
+        expect(r, `${s.id} "${st.prompt}": too short`).toBeGreaterThan(0.5)
+      }
+    }
+  })
+
   it('meets the MVP volume targets', () => {
     expect(concepts.length).toBeGreaterThanOrEqual(50)
     expect(modules.length).toBe(8)

@@ -2,31 +2,40 @@
   {
     "id": "q-ts-01",
     "type": "troubleshooting",
-    "concepts": ["troubleshooting", "association", "dhcp", "dns"],
+    "concepts": [
+      "troubleshooting",
+      "association",
+      "dhcp",
+      "dns"
+    ],
     "domain": "troubleshooting",
     "difficulty": 1,
     "prompt": "Un utilisateur dit : « Le Wi-Fi ne marche pas. » Quelle est la première question utile ?",
     "choices": [
-      "À quelle étape ça bloque : le SSID est-il visible, la connexion réussit-elle, y a-t-il une adresse IP, les sites s’ouvrent-ils ?",
-      "Quel est ton mot de passe ?",
-      "Redémarrer le contrôleur cloud",
-      "Changer le canal de l’AP"
+      "Quel est ton mot de passe ? La plupart des pannes viennent d’une clé mal saisie",
+      "Sur quel canal es-tu ? Changer le canal de l’AP résout la majorité des plaintes",
+      "À quelle étape ça bloque : SSID visible ? connexion réussie ? adresse IP ? sites accessibles ?",
+      "Depuis combien de temps ? Un redémarrage du contrôleur cloud règle les pannes récentes"
     ],
-    "answer": 0,
+    "answer": 2,
     "explanation": "« Le Wi-Fi ne marche pas » décrit dix pannes différentes. La chaîne SSID → association → auth → IP → gateway → DNS → Internet dit où regarder."
   },
   {
     "id": "q-ts-02",
     "type": "troubleshooting",
-    "concepts": ["dhcp", "vlan", "association"],
+    "concepts": [
+      "dhcp",
+      "vlan",
+      "association"
+    ],
     "domain": "troubleshooting",
     "difficulty": 2,
     "prompt": "Le client se connecte au SSID mais reçoit 169.254.x.x. Quel raisonnement ?",
     "choices": [
       "Wi-Fi probablement OK → couche 2 partiellement OK → DHCP suspect → vérifier aussi le VLAN",
-      "La radio est en cause : changer de canal",
-      "DNS est en cause",
-      "Le certificat RADIUS est expiré"
+      "DNS suspect → le résolveur n’a pas répondu → le client s’est replié sur une adresse locale",
+      "RADIUS suspect → certificat expiré → l’AP a refusé de transmettre le bail au client",
+      "Radio suspecte → signal trop faible pour DHCP → changer de canal ou augmenter la puissance"
     ],
     "answer": 0,
     "explanation": "Association et sécurité ont réussi (le client est « connecté »). Le Discover n’a pas trouvé de serveur : VLAN absent du trunk, mapping SSID → VLAN, ou serveur DHCP down."
@@ -34,63 +43,80 @@
   {
     "id": "q-ts-03",
     "type": "troubleshooting",
-    "concepts": ["8021x", "eap", "radius", "dhcp"],
+    "concepts": [
+      "8021x",
+      "eap",
+      "radius",
+      "dhcp"
+    ],
     "domain": "troubleshooting",
     "difficulty": 2,
     "prompt": "WPA2-Enterprise échoue avant l’obtention d’une IP. Où regarder en premier ?",
     "choices": [
-      "802.1X, EAP, certificat, RADIUS — pas DHCP",
-      "DHCP",
-      "DNS",
-      "NAT"
+      "NAT et route par défaut du routeur",
+      "DNS et résolveur fourni par DHCP",
+      "802.1X, EAP, certificat, RADIUS",
+      "DHCP, relais et scope du VLAN"
     ],
-    "answer": 0,
+    "answer": 2,
     "explanation": "En Enterprise, l’authentification se joue avant toute IP. Un échec ici n’a rien à voir avec DHCP. Regarder les événements client : RADIUS timeout ? Reject ? Certificat refusé ?"
   },
   {
     "id": "q-ts-04",
     "type": "troubleshooting",
-    "concepts": ["radius", "psk", "wpa"],
+    "concepts": [
+      "radius",
+      "psk",
+      "wpa"
+    ],
     "domain": "troubleshooting",
     "difficulty": 2,
     "prompt": "Depuis 10 h 15, tous les employés échouent sur le SSID Corporate (Enterprise) ; le SSID Guest (PSK) fonctionne. Suspect n°1 ?",
     "choices": [
-      "Le serveur RADIUS (down, injoignable, secret partagé) : seul le SSID qui en dépend est touché",
-      "Le serveur DHCP",
-      "Un problème radio",
-      "Le contrôleur cloud"
+      "Un problème radio sur la bande 5 GHz : Corporate y est diffusé, Guest reste en 2.4 GHz",
+      "Le serveur DHCP du VLAN Corporate : le scope est plein depuis l’arrivée des employés à 10 h",
+      "Le contrôleur cloud : la configuration du SSID Corporate a été retirée des AP à 10 h 15",
+      "Le serveur RADIUS (down, injoignable, secret partagé) : seul le SSID qui en dépend est touché"
     ],
-    "answer": 0,
+    "answer": 3,
     "explanation": "Un symptôme massif, simultané et limité aux SSID 802.1X pointe vers la chaîne RADIUS. Guest (PSK) ne dépend pas de RADIUS."
   },
   {
     "id": "q-ts-05",
     "type": "troubleshooting",
-    "concepts": ["vlan", "ssid", "dhcp"],
+    "concepts": [
+      "vlan",
+      "ssid",
+      "dhcp"
+    ],
     "domain": "troubleshooting",
     "difficulty": 2,
     "prompt": "Sur un seul AP du bâtiment B, les clients Guest n’ont pas d’IP ; sur les autres AP, Guest fonctionne. Suspect ?",
     "choices": [
-      "Le port du switch de cet AP : VLAN Guest absent du trunk (ou port en access)",
-      "Le serveur RADIUS",
-      "Le SSID Guest lui-même (config globale)",
-      "Le DNS"
+      "Le serveur RADIUS : il refuse les clients Guest qui s’associent à cet AP précis",
+      "Le résolveur DNS : les clients de cet AP reçoivent un serveur qui ne répond pas",
+      "La configuration globale du SSID Guest : son VLAN a été modifié dans le profil du site",
+      "Le port du switch de cet AP : VLAN Guest absent du trunk (ou port en access)"
     ],
-    "answer": 0,
+    "answer": 3,
     "explanation": "Une config globale (SSID, DHCP, RADIUS) toucherait tous les AP. Un seul AP en défaut → son raccordement filaire : port, trunk, VLAN autorisés."
   },
   {
     "id": "q-ts-06",
     "type": "troubleshooting",
-    "concepts": ["control-plane", "data-plane", "ucentral"],
+    "concepts": [
+      "control-plane",
+      "data-plane",
+      "ucentral"
+    ],
     "domain": "troubleshooting",
     "difficulty": 2,
     "prompt": "Dans la console, 12 AP d’un site apparaissent « disconnected » depuis 5 minutes. Aucun ticket utilisateur. Que conclure ?",
     "choices": [
-      "Le control plane du site est coupé (sortie Internet du VLAN de management, DNS, pare-feu) ; le data plane continue, d’où l’absence de plaintes",
-      "Les 12 AP sont en panne matérielle",
-      "Le serveur RADIUS est down",
-      "Les clients n’ont plus d’IP"
+      "Le control plane du site est coupé (sortie Internet du VLAN de management, DNS, pare-feu) ; le data plane continue",
+      "Les 12 AP sont en panne matérielle : une surtension sur le switch PoE les a mis hors service simultanément",
+      "Le serveur RADIUS est down : sans authentification, les AP se déconnectent du contrôleur pour se protéger",
+      "Les clients n’ont plus d’IP : le serveur DHCP du site est tombé et les AP n’ont plus de bail valide"
     ],
     "answer": 0,
     "explanation": "Data plane peut fonctionner alors que control plane est brisé. Douze AP d’un coup = cause commune côté sortie du site, pas douze pannes."
@@ -98,15 +124,18 @@
   {
     "id": "q-ts-07",
     "type": "troubleshooting",
-    "concepts": ["captive-portal", "dns"],
+    "concepts": [
+      "captive-portal",
+      "dns"
+    ],
     "domain": "troubleshooting",
     "difficulty": 2,
     "prompt": "Sur le Wi-Fi invité, le téléphone a une IP mais le portail ne s’affiche jamais et rien ne s’ouvre. Où chercher ?",
     "choices": [
-      "La chaîne du captive portal : DNS accessible dans le walled garden ? Redirection fonctionnelle ? Portail HTTPS joignable ?",
-      "L’association Wi-Fi",
-      "Le RADIUS des employés",
-      "Le PoE"
+      "La chaîne du captive portal : DNS dans le walled garden ? redirection ? portail HTTPS joignable ?",
+      "Le RADIUS des employés : le portail invité s’appuie sur le même serveur, actuellement saturé",
+      "L’association Wi-Fi : le client est probablement associé à un AP dont le SSID Guest est mal configuré",
+      "Le PoE de l’AP : sous-alimenté, l’AP ne peut pas assurer la redirection HTTP vers le portail"
     ],
     "answer": 0,
     "explanation": "IP obtenue = couches 2–3 OK. Le client est captif mais la détection/redirection échoue : DNS bloqué, portail hors walled garden, certificat du portail."
@@ -114,31 +143,39 @@
   {
     "id": "q-ts-08",
     "type": "troubleshooting",
-    "concepts": ["rssi", "channel-utilization", "roaming"],
+    "concepts": [
+      "rssi",
+      "channel-utilization",
+      "roaming"
+    ],
     "domain": "troubleshooting",
     "difficulty": 2,
     "prompt": "Un utilisateur se plaint de vidéos qui saccadent uniquement dans la salle de conférence. Connectivité et IP OK. Quelles métriques ?",
     "choices": [
-      "RSSI/SNR du client, utilisation du canal et taux de retry sur l’AP de cette salle, et l’AP auquel le client est réellement associé (sticky ?)",
-      "Le bail DHCP",
-      "Le secret partagé RADIUS",
-      "La version de l’API du contrôleur"
+      "Durée du bail DHCP et nombre d’adresses libres dans le scope du VLAN utilisé par cette salle",
+      "Secret partagé RADIUS et délai de réponse du serveur d’authentification pour les clients de la salle",
+      "RSSI/SNR du client, utilisation du canal et retries sur l’AP de cette salle, et l’AP réellement utilisé (sticky ?)",
+      "Version de l’API du contrôleur et latence des appels uCentral vers l’AP de cette salle"
     ],
-    "answer": 0,
+    "answer": 2,
     "explanation": "Problème localisé et de performance, pas de connectivité : c’est radio. Signal faible, canal saturé ou client accroché à un AP lointain."
   },
   {
     "id": "q-ts-09",
     "type": "troubleshooting",
-    "concepts": ["ntp", "certificates", "ucentral"],
+    "concepts": [
+      "ntp",
+      "certificates",
+      "ucentral"
+    ],
     "domain": "troubleshooting",
     "difficulty": 3,
     "prompt": "Après une coupure de courant, plusieurs AP redémarrent mais ne se reconnectent au cloud qu’après plusieurs minutes, avec des erreurs TLS « certificate not yet valid » dans les logs. Cause ?",
     "choices": [
       "Horloge fausse au démarrage : tant que NTP n’a pas synchronisé l’heure, la validation du certificat échoue",
-      "Le firmware est corrompu",
-      "Le VLAN client est incorrect",
-      "RADIUS est down"
+      "VLAN client incorrect après le redémarrage du switch : les AP attendent une nouvelle configuration",
+      "Firmware corrompu par la coupure : les AP retéléchargent leur image avant de pouvoir se reconnecter",
+      "RADIUS down après la coupure : les AP ne peuvent pas s’authentifier auprès du contrôleur cloud"
     ],
     "answer": 0,
     "explanation": "Un AP démarre souvent avec une date par défaut. Le TLS vers le Gateway (et RADIUS/EAP) dépend d’une heure juste. NTP est une dépendance cachée."
@@ -146,40 +183,90 @@
   {
     "id": "q-ts-10",
     "type": "troubleshooting",
-    "concepts": ["pcap", "radius", "udp"],
+    "concepts": [
+      "pcap",
+      "radius",
+      "udp"
+    ],
     "domain": "troubleshooting",
     "difficulty": 3,
     "prompt": "Les événements disent « RADIUS timeout » mais l’équipe serveur affirme que RADIUS est up. Quel outil tranche ?",
     "choices": [
-      "Une capture de paquets (PCAP) sur l’interface Ethernet de l’AP : l’Access-Request part-il ? Une réponse revient-elle ?",
-      "Un redémarrage du contrôleur",
-      "Changer le canal radio",
-      "Vérifier le bail DHCP"
+      "Une vérification du bail DHCP de l’AP, dont l’expiration expliquerait les timeouts observés",
+      "Un changement de canal radio sur l’AP, pour exclure une interférence qui retarderait les réponses RADIUS",
+      "Un redémarrage du contrôleur cloud, qui réinitialise les sessions RADIUS de tous les AP du site",
+      "Une capture de paquets (PCAP) sur l’interface Ethernet de l’AP : l’Access-Request part-il ? une réponse revient-elle ?"
     ],
-    "answer": 0,
+    "answer": 3,
     "explanation": "La capture montre la vérité : si la requête part et rien ne revient, le chemin (pare-feu UDP 1812, routage, secret partagé → paquet ignoré) est en cause, pas le service."
   },
   {
     "id": "q-ts-11",
     "type": "ordering",
-    "concepts": ["troubleshooting", "association", "8021x", "dhcp", "dns"],
+    "concepts": [
+      "troubleshooting",
+      "association",
+      "8021x",
+      "dhcp",
+      "dns"
+    ],
     "domain": "troubleshooting",
     "difficulty": 2,
     "prompt": "Remets dans l’ordre les questions à se poser pour localiser un problème de connexion Wi-Fi.",
-    "items": ["Le SSID est-il visible ?", "L’association 802.11 réussit-elle ?", "L’authentification (PSK / 802.1X / RADIUS) réussit-elle ?", "Une adresse IP est-elle obtenue (VLAN / DHCP) ?", "La gateway répond-elle (ARP / routage) ?", "Les noms se résolvent-ils (DNS) ?", "Un captive portal attend-il une autorisation ?"],
+    "items": [
+      "Le SSID est-il visible ?",
+      "L’association 802.11 réussit-elle ?",
+      "L’authentification (PSK / 802.1X / RADIUS) réussit-elle ?",
+      "Une adresse IP est-elle obtenue (VLAN / DHCP) ?",
+      "La gateway répond-elle (ARP / routage) ?",
+      "Les noms se résolvent-ils (DNS) ?",
+      "Un captive portal attend-il une autorisation ?"
+    ],
     "explanation": "Suivre la chaîne de bas en haut. Chaque « oui » élimine une couche."
   },
   {
     "id": "q-ts-12",
     "type": "free-response",
-    "concepts": ["troubleshooting", "vlan", "dhcp", "data-plane"],
+    "concepts": [
+      "troubleshooting",
+      "vlan",
+      "dhcp",
+      "data-plane"
+    ],
     "domain": "troubleshooting",
     "difficulty": 2,
     "prompt": "« Association OK, RADIUS Access-Accept OK, mais le client n’a pas d’adresse IP. » Décris ton raisonnement.",
     "expected": [
-      { "label": "802.11 et authentification sont validés", "keywords": ["802.11", "association", "authentif", "radius ok", "accept", "validé", "éliminé"] },
-      { "label": "Le suspect est VLAN / DHCP", "keywords": ["vlan", "dhcp"] },
-      { "label": "Regarder le data plane (AP → trunk → switch → serveur DHCP)", "keywords": ["data plane", "trunk", "switch", "filaire", "port", "scope"] }
+      {
+        "label": "802.11 et authentification sont validés",
+        "keywords": [
+          "802.11",
+          "association",
+          "authentif",
+          "radius ok",
+          "accept",
+          "validé",
+          "éliminé"
+        ]
+      },
+      {
+        "label": "Le suspect est VLAN / DHCP",
+        "keywords": [
+          "vlan",
+          "dhcp"
+        ]
+      },
+      {
+        "label": "Regarder le data plane (AP → trunk → switch → serveur DHCP)",
+        "keywords": [
+          "data plane",
+          "trunk",
+          "switch",
+          "filaire",
+          "port",
+          "scope"
+        ]
+      }
     ],
     "sampleAnswer": "802.11 ✓ → authentification ✓ → le client est admis mais n’obtient pas d’IP : le problème est donc VLAN/DHCP. Je vérifie que le VLAN attribué (fixe ou renvoyé par RADIUS) existe sur le switch et est autorisé sur le trunk vers l’AP, puis qu’un scope DHCP existe pour ce VLAN. C’est le data plane, pas le cloud.",
     "explanation": "Le réflexe attendu : localiser dans la chaîne, sans connaître chaque détail du protocole."
@@ -187,31 +274,40 @@
   {
     "id": "q-ts-13",
     "type": "troubleshooting",
-    "concepts": ["wifi", "dhcp", "dns", "captive-portal"],
+    "concepts": [
+      "wifi",
+      "dhcp",
+      "dns",
+      "captive-portal"
+    ],
     "domain": "troubleshooting",
     "difficulty": 1,
     "prompt": "Pourquoi un client peut-il avoir « du Wi-Fi » (associé, bon signal) mais pas Internet ?",
     "choices": [
-      "Parce que le Wi-Fi ne couvre que les couches 1–2 : il manque peut-être l’IP (DHCP), la gateway, le DNS ou l’autorisation d’un captive portal",
-      "C’est impossible : Wi-Fi = Internet",
-      "Parce que le signal est trop fort",
-      "Parce que le SSID est caché"
+      "C’est impossible en pratique : une association réussie implique que le client a reçu une adresse IP",
+      "Le signal est trop fort : à moins de −40 dBm, l’AP sature et cesse de relayer les paquets IP",
+      "Le SSID est caché : le client reste associé mais l’AP ne relaie pas son trafic vers le switch",
+      "Le Wi-Fi ne couvre que les couches 1–2 : il peut manquer l’IP (DHCP), la gateway, le DNS ou l’autorisation du portail"
     ],
-    "answer": 0,
+    "answer": 3,
     "explanation": "Wi-Fi n’est pas Internet. Tout ce qui est au-dessus de la couche 2 peut encore échouer."
   },
   {
     "id": "q-ts-14",
     "type": "troubleshooting",
-    "concepts": ["events", "8021x", "radius"],
+    "concepts": [
+      "events",
+      "8021x",
+      "radius"
+    ],
     "domain": "troubleshooting",
     "difficulty": 2,
     "prompt": "Les événements d’un client montrent : « associated → EAP started → Access-Reject ». Où est le problème ?",
     "choices": [
-      "Côté identité : identifiants invalides, compte désactivé, certificat client refusé — RADIUS a répondu, il a dit non",
-      "RADIUS est injoignable",
-      "Le VLAN est absent du trunk",
-      "Le DHCP est down"
+      "Côté identité : identifiants invalides, compte désactivé, certificat client refusé — RADIUS a répondu non",
+      "Côté filaire : le VLAN renvoyé par RADIUS est absent du trunk, ce que l’AP signale par un Reject",
+      "Côté réseau : RADIUS est injoignable et l’AP a généré lui-même le Reject après trois tentatives",
+      "Côté DHCP : le scope est plein et l’AP refuse l’authentification faute d’adresse disponible"
     ],
     "answer": 0,
     "explanation": "Un Reject prouve que la chaîne AP ↔ RADIUS fonctionne. C’est la décision qui est négative : problème d’identité ou de politique, pas de réseau."
@@ -219,17 +315,21 @@
   {
     "id": "q-ts-15",
     "type": "troubleshooting",
-    "concepts": ["poe", "access-point", "lldp"],
+    "concepts": [
+      "poe",
+      "access-point",
+      "lldp"
+    ],
     "domain": "troubleshooting",
     "difficulty": 2,
     "prompt": "Un AP disparaît du cloud toutes les nuits vers 2 h et revient à 6 h. Les clients de cette zone sont aussi coupés. Piste ?",
     "choices": [
-      "Le switch (ou son port PoE) : planification d’économie d’énergie, reboot nocturne, ou mise à jour programmée — vérifier via LLDP quel switch/port alimente cet AP",
-      "Le serveur RADIUS",
-      "Un problème DNS",
-      "Le roaming"
+      "Le roaming : les clients basculent la nuit sur un autre AP, et celui-ci se met en veille faute de trafic",
+      "Un problème DNS : le résolveur du site redémarre chaque nuit et l’AP perd le nom du Gateway",
+      "Le switch ou son port PoE : économie d’énergie planifiée, reboot nocturne ou mise à jour — vérifier via LLDP quel port alimente l’AP",
+      "Le serveur RADIUS : une maintenance nocturne le rend injoignable, et l’AP se met hors ligne en attendant"
     ],
-    "answer": 0,
+    "answer": 2,
     "explanation": "Control plane ET data plane tombent en même temps, à heure fixe : l’AP lui-même s’éteint. Suspect : l’alimentation PoE ou le switch amont."
   }
 ]

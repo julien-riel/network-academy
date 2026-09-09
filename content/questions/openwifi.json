@@ -2,15 +2,17 @@
   {
     "id": "q-ow-01",
     "type": "multiple-choice",
-    "concepts": ["openwifi"],
+    "concepts": [
+      "openwifi"
+    ],
     "domain": "openwifi",
     "difficulty": 1,
     "prompt": "Pourquoi dit-on qu’OpenWiFi est « disaggregated » (désagrégé) ?",
     "choices": [
-      "Le matériel, le NOS de l’AP, le protocole de contrôle et le contrôleur cloud sont séparés et peuvent venir de fournisseurs différents",
-      "Parce que chaque AP fonctionne sans contrôleur",
-      "Parce que le trafic est réparti sur plusieurs canaux",
-      "Parce que les clients sont isolés par VLAN"
+      "Matériel, NOS de l’AP, protocole de contrôle et contrôleur cloud sont séparés et peuvent venir de fournisseurs différents",
+      "Les clients sont isolés par VLAN et par SSID, de sorte qu’aucun groupe ne voit le trafic des autres",
+      "Le trafic utilisateur est réparti sur plusieurs canaux et plusieurs bandes pour éviter la contention",
+      "Chaque AP fonctionne de façon autonome, sans contrôleur, et se synchronise avec ses voisins par LLDP"
     ],
     "answer": 0,
     "explanation": "HARDWARE + OPEN AP NOS + STANDARDIZED CONTROL (uCentral) + CLOUD CONTROLLER. Deux fabricants d’AP, une seule plateforme (ex. NetExperience)."
@@ -18,168 +20,262 @@
   {
     "id": "q-ow-02",
     "type": "matching",
-    "concepts": ["ap-nos", "ucentral", "openwifi"],
+    "concepts": [
+      "ap-nos",
+      "ucentral",
+      "openwifi"
+    ],
     "domain": "openwifi",
     "difficulty": 2,
     "prompt": "Associe chaque composant d’un AP OpenWiFi à son rôle.",
     "pairs": [
-      { "left": "Linux / OpenWrt", "right": "Système d’exploitation de base" },
-      { "left": "hostapd", "right": "SSID, association, WPA, côté AP de 802.1X" },
-      { "left": "Wi-Fi drivers", "right": "Pilotage des radios" },
-      { "left": "uCentral client", "right": "Connexion au cloud : reçoit la config, remonte l’état" }
+      {
+        "left": "Linux / OpenWrt",
+        "right": "Système d’exploitation de base"
+      },
+      {
+        "left": "hostapd",
+        "right": "SSID, association, WPA, côté AP de 802.1X"
+      },
+      {
+        "left": "Wi-Fi drivers",
+        "right": "Pilotage des radios"
+      },
+      {
+        "left": "uCentral client",
+        "right": "Connexion au cloud : reçoit la config, remonte l’état"
+      }
     ],
     "explanation": "L’idée importante : l’AP contient un logiciel local capable de gérer radio, clients et forwarding, tout en recevant sa configuration du cloud."
   },
   {
     "id": "q-ow-03",
     "type": "multiple-choice",
-    "concepts": ["ucentral"],
+    "concepts": [
+      "ucentral"
+    ],
     "domain": "openwifi",
     "difficulty": 1,
     "prompt": "Qu’est-ce que uCentral ?",
     "choices": [
-      "Le protocole de contrôle entre le device et le cloud : une connexion WebSocket persistante avec des messages JSON-RPC (config, état, commandes, télémétrie)",
-      "Le serveur RADIUS d’OpenWiFi",
-      "Le nom du captive portal de TIP",
-      "Une bande de fréquence"
+      "La bande de fréquence centrale (« u-central ») utilisée par les AP OpenWiFi pour le backhaul entre eux",
+      "Le serveur RADIUS intégré à OpenWiFi : il authentifie les clients Wi-Fi et renvoie le VLAN à appliquer",
+      "Le captive portal de TIP : une API HTTPS par laquelle les invités acceptent les conditions d’accès",
+      "Le protocole de contrôle device ↔ cloud : WebSocket persistant et messages JSON-RPC (config, état, commandes, télémétrie)"
     ],
-    "answer": 0,
+    "answer": 3,
     "explanation": "Penser « API bidirectionnelle persistante entre IoT device et control plane ». La configuration est un JSON validé par JSON Schema."
   },
   {
     "id": "q-ow-04",
     "type": "multiple-choice",
-    "concepts": ["ucentral", "nat"],
+    "concepts": [
+      "ucentral",
+      "nat"
+    ],
     "domain": "openwifi",
     "difficulty": 2,
     "prompt": "Qui initie la connexion uCentral, et pourquoi est-ce important ?",
     "choices": [
-      "Le device (AP/switch) initie la connexion sortante vers le Gateway ; elle traverse donc NAT et pare-feu sans ouverture entrante",
-      "Le cloud initie la connexion vers chaque AP, ce qui exige une IP publique par AP",
-      "Le serveur RADIUS initie la connexion",
-      "Le switch initie la connexion pour le compte de l’AP"
+      "Le serveur RADIUS initie la connexion : il transmet l’identité de l’AP au Gateway après authentification",
+      "Le device initie une connexion sortante vers le Gateway : elle traverse NAT et pare-feu sans ouverture entrante",
+      "Le cloud initie la connexion vers chaque AP : chaque site doit donc exposer une IP publique par AP",
+      "Le switch initie la connexion pour le compte de l’AP : LLDP lui a appris le serial de l’AP"
     ],
-    "answer": 0,
+    "answer": 1,
     "explanation": "Une connexion sortante (WebSocket TLS) suffit ; une fois établie, les deux sens sont possibles (config poussée, commandes)."
   },
   {
     "id": "q-ow-05",
     "type": "matching",
-    "concepts": ["cloud-sdk", "owgw", "owsec", "owprov", "firmware", "analytics"],
+    "concepts": [
+      "cloud-sdk",
+      "owgw",
+      "owsec",
+      "owprov",
+      "firmware",
+      "analytics"
+    ],
     "domain": "openwifi",
     "difficulty": 2,
     "prompt": "Associe chaque micro-service du Cloud SDK OpenWiFi à sa fonction.",
     "pairs": [
-      { "left": "OWGW", "right": "Gateway : connexions uCentral, configs, commandes" },
-      { "left": "OWSEC", "right": "Security : authentification des utilisateurs et de l’API" },
-      { "left": "OWPROV", "right": "Provisioning : inventaire, tenant/site, configuration désirée" },
-      { "left": "OWFMS", "right": "Firmware Management" },
-      { "left": "OWANALYTICS", "right": "Analytics : agrégation des métriques" },
-      { "left": "OWSUB", "right": "Subscriber : portail abonné" }
+      {
+        "left": "OWGW",
+        "right": "Gateway : connexions uCentral, configs, commandes"
+      },
+      {
+        "left": "OWSEC",
+        "right": "Security : authentification des utilisateurs et de l’API"
+      },
+      {
+        "left": "OWPROV",
+        "right": "Provisioning : inventaire, tenant/site, configuration désirée"
+      },
+      {
+        "left": "OWFMS",
+        "right": "Firmware Management"
+      },
+      {
+        "left": "OWANALYTICS",
+        "right": "Analytics : agrégation des métriques"
+      },
+      {
+        "left": "OWSUB",
+        "right": "Subscriber : portail abonné"
+      }
     ],
     "explanation": "Une architecture micro-services : API gateway pour devices + auth + inventaire + firmware + analytics + abonné."
   },
   {
     "id": "q-ow-06",
     "type": "ordering",
-    "concepts": ["ztp", "device-certificate", "owgw", "owprov"],
+    "concepts": [
+      "ztp",
+      "device-certificate",
+      "owgw",
+      "owprov"
+    ],
     "domain": "openwifi",
     "difficulty": 2,
     "prompt": "Remets dans l’ordre les étapes du zero-touch provisioning d’un AP.",
-    "items": ["Le device sort d’usine avec une identité (serial, certificat)", "Installé chez le client, il obtient une IP par DHCP", "Il contacte le redirector pour découvrir son Gateway", "Il ouvre la connexion uCentral vers le Gateway", "Provisioning l’associe à un tenant/site et calcule sa configuration", "La configuration (et le firmware) sont poussés ; l’AP est opérationnel"],
+    "items": [
+      "Le device sort d’usine avec une identité (serial, certificat)",
+      "Installé chez le client, il obtient une IP par DHCP",
+      "Il contacte le redirector pour découvrir son Gateway",
+      "Il ouvre la connexion uCentral vers le Gateway",
+      "Provisioning l’associe à un tenant/site et calcule sa configuration",
+      "La configuration (et le firmware) sont poussés ; l’AP est opérationnel"
+    ],
     "explanation": "Identité → réseau → découverte → connexion → rattachement → configuration."
   },
   {
     "id": "q-ow-07",
     "type": "troubleshooting",
-    "concepts": ["ztp", "dhcp", "dns", "device-certificate"],
+    "concepts": [
+      "ztp",
+      "dhcp",
+      "dns",
+      "device-certificate"
+    ],
     "domain": "openwifi",
     "difficulty": 2,
     "prompt": "Un AP neuf, branché et allumé (LED OK), n’apparaît jamais dans le cloud. Quel ordre de vérification est le plus logique ?",
     "choices": [
-      "DHCP sur le VLAN de management → DNS (redirector/gateway) → sortie HTTPS/WebSocket autorisée → NTP/certificat → device enregistré dans l’inventaire",
-      "RADIUS → VLAN client → SSID",
-      "Canal radio → puissance → RRM",
-      "Captive portal → walled garden"
+      "Captive portal → walled garden : l’AP doit d’abord passer le portail invité pour atteindre le Gateway",
+      "Canal radio → puissance → RRM : le contrôleur n’accepte un AP que lorsqu’il a trouvé un canal libre",
+      "RADIUS → VLAN client → SSID : tant que l’AP ne peut pas authentifier un client, il ne s’annonce pas au cloud",
+      "DHCP sur le VLAN de management → DNS (redirector/gateway) → sortie HTTPS/WebSocket → NTP/certificat → device dans l’inventaire"
     ],
-    "answer": 0,
+    "answer": 3,
     "explanation": "L’onboarding est un problème de control plane : l’AP doit avoir une IP, résoudre des noms, sortir en TLS, avoir l’heure juste, et être connu du tenant. Les SSID et RADIUS n’ont rien à voir."
   },
   {
     "id": "q-ow-08",
     "type": "multiple-choice",
-    "concepts": ["control-plane", "data-plane"],
+    "concepts": [
+      "control-plane",
+      "data-plane"
+    ],
     "domain": "openwifi",
     "difficulty": 1,
     "prompt": "Le trafic Internet d’un utilisateur Wi-Fi passe-t-il par le contrôleur cloud NetExperience ?",
     "choices": [
-      "Non : le contrôleur est le control plane (config, télémétrie) ; le trafic utilisateur sort localement (data plane, local breakout)",
-      "Oui, tout le trafic est tunnelisé vers le cloud",
-      "Seulement le trafic HTTPS",
-      "Seulement pour les SSID Enterprise"
+      "Seulement le trafic HTTPS, que le cloud inspecte pour appliquer les règles du captive portal",
+      "Non : le contrôleur est le control plane (config, télémétrie) ; le trafic sort localement (data plane)",
+      "Seulement pour les SSID Enterprise, dont le trafic doit passer par le serveur RADIUS du cloud",
+      "Oui : tout le trafic est tunnelisé vers le cloud, qui applique les politiques avant de le relayer"
     ],
-    "answer": 0,
+    "answer": 1,
     "explanation": "Phone → AP → Switch → Router → Internet. Le cloud ne voit que la configuration et les métriques. C’est fondamental pour la scalabilité."
   },
   {
     "id": "q-ow-09",
     "type": "troubleshooting",
-    "concepts": ["control-plane", "data-plane", "ucentral"],
+    "concepts": [
+      "control-plane",
+      "data-plane",
+      "ucentral"
+    ],
     "domain": "openwifi",
     "difficulty": 2,
     "prompt": "L’AP fonctionne pour les clients, mais n’apparaît plus connecté au cloud. Que conclure ?",
     "choices": [
+      "Le serveur DHCP est down : sans bail valide, l’AP ne peut plus maintenir sa connexion au contrôleur",
+      "Le VLAN client est incorrect : les clients naviguent sur un mauvais réseau et le cloud a coupé l’AP",
       "Le data plane fonctionne alors que le control plane est brisé : vérifier la connexion uCentral (sortie WebSocket, DNS, certificat, NTP)",
-      "Les clients vont perdre Internet dans quelques secondes",
-      "Le serveur DHCP est down",
-      "Le VLAN client est incorrect"
+      "Les clients vont perdre Internet d’ici quelques secondes : l’AP ne peut plus renouveler leur autorisation auprès du cloud"
     ],
-    "answer": 0,
+    "answer": 2,
     "explanation": "Un AP OpenWiFi peut continuer à transporter du trafic sans son contrôleur. Il ne peut plus recevoir de config ni remonter sa télémétrie. Excellent exemple de la séparation des plans."
   },
   {
     "id": "q-ow-10",
     "type": "multiple-choice",
-    "concepts": ["openlan", "switch", "ucentral"],
+    "concepts": [
+      "openlan",
+      "switch",
+      "ucentral"
+    ],
     "domain": "openwifi",
     "difficulty": 1,
     "prompt": "Qu’est-ce qu’OpenLAN ?",
     "choices": [
-      "L’extension d’OpenWiFi au switching : des switches multi-fabricants pilotés via uCentral depuis la même plateforme cloud",
-      "Un VLAN réservé au management",
-      "Le nom du captive portal de NetExperience",
-      "Une bande de fréquence Wi-Fi"
+      "Le captive portal de NetExperience, qui identifie les invités par leur adresse MAC sur le LAN",
+      "Le VLAN réservé au management des AP, séparé des VLAN clients pour sécuriser le control plane",
+      "Une bande de fréquence Wi-Fi dédiée au backhaul entre AP, qui remplace le câblage Ethernet",
+      "L’extension d’OpenWiFi au switching : des switches multi-fabricants pilotés via uCentral depuis la même plateforme"
     ],
-    "answer": 0,
+    "answer": 3,
     "explanation": "Même logique que pour les AP : NOS ouvert, uCentral, ZTP via redirector. Ports, VLAN, trunk, PoE, LLDP deviennent gérables depuis le cloud."
   },
   {
     "id": "q-ow-11",
     "type": "matching",
-    "concepts": ["telemetry", "events", "pcap", "logs"],
+    "concepts": [
+      "telemetry",
+      "events",
+      "pcap",
+      "logs"
+    ],
     "domain": "openwifi",
     "difficulty": 2,
     "prompt": "Associe chaque outil d’observabilité à ce qu’il révèle.",
     "pairs": [
-      { "left": "Métriques (RSSI, utilisation canal)", "right": "La qualité du lien radio et la charge, en continu" },
-      { "left": "Événements client", "right": "À quelle étape de la connexion un client a échoué (assoc, 802.1X, DHCP)" },
-      { "left": "Logs (hostapd…)", "right": "Le détail au niveau du processus sur l’AP" },
-      { "left": "PCAP distant", "right": "Les trames/paquets réellement échangés (RADIUS parti ? DHCP Offer revenu ?)" }
+      {
+        "left": "Métriques (RSSI, utilisation canal)",
+        "right": "La qualité du lien radio et la charge, en continu"
+      },
+      {
+        "left": "Événements client",
+        "right": "À quelle étape de la connexion un client a échoué (assoc, 802.1X, DHCP)"
+      },
+      {
+        "left": "Logs (hostapd…)",
+        "right": "Le détail au niveau du processus sur l’AP"
+      },
+      {
+        "left": "PCAP distant",
+        "right": "Les trames/paquets réellement échangés (RADIUS parti ? DHCP Offer revenu ?)"
+      }
     ],
     "explanation": "Du plus agrégé (métriques) au plus précis (capture), selon la question à résoudre."
   },
   {
     "id": "q-ow-12",
     "type": "multiple-choice",
-    "concepts": ["owsec", "radius"],
+    "concepts": [
+      "owsec",
+      "radius"
+    ],
     "domain": "openwifi",
     "difficulty": 2,
     "prompt": "Quelle différence entre OWSEC et RADIUS ?",
     "choices": [
       "OWSEC authentifie les utilisateurs et les appels API du contrôleur ; RADIUS authentifie les clients Wi-Fi",
-      "Ce sont deux noms du même service",
-      "OWSEC remplace RADIUS dans OpenWiFi",
-      "RADIUS authentifie les administrateurs de la plateforme"
+      "RADIUS authentifie les administrateurs de la plateforme ; OWSEC authentifie les clients Wi-Fi",
+      "OWSEC remplace RADIUS dans OpenWiFi : les AP lui envoient directement les Access-Request",
+      "Ce sont deux noms du même service : OWSEC est l’implémentation RADIUS fournie avec le Cloud SDK"
     ],
     "answer": 0,
     "explanation": "Deux plans, deux identités : les administrateurs/API (OWSEC) et les utilisateurs du réseau (RADIUS)."
@@ -187,15 +283,54 @@
   {
     "id": "q-ow-13",
     "type": "free-response",
-    "concepts": ["ucentral", "control-plane"],
+    "concepts": [
+      "ucentral",
+      "control-plane"
+    ],
     "domain": "openwifi",
     "difficulty": 2,
     "prompt": "Explique le rôle de uCentral à un collègue développeur.",
     "expected": [
-      { "label": "Protocole de contrôle device ↔ cloud", "keywords": ["contrôle", "control", "cloud", "gateway", "contrôleur"] },
-      { "label": "WebSocket persistant + JSON-RPC", "keywords": ["websocket", "json-rpc", "jsonrpc", "json"] },
-      { "label": "Transporte configuration, état, commandes, télémétrie", "keywords": ["config", "état", "state", "commande", "télémétrie", "telemetry"] },
-      { "label": "Initié par le device / config validée par schéma", "keywords": ["initi", "sortant", "schéma", "schema", "déclarati"] }
+      {
+        "label": "Protocole de contrôle device ↔ cloud",
+        "keywords": [
+          "contrôle",
+          "control",
+          "cloud",
+          "gateway",
+          "contrôleur"
+        ]
+      },
+      {
+        "label": "WebSocket persistant + JSON-RPC",
+        "keywords": [
+          "websocket",
+          "json-rpc",
+          "jsonrpc",
+          "json"
+        ]
+      },
+      {
+        "label": "Transporte configuration, état, commandes, télémétrie",
+        "keywords": [
+          "config",
+          "état",
+          "state",
+          "commande",
+          "télémétrie",
+          "telemetry"
+        ]
+      },
+      {
+        "label": "Initié par le device / config validée par schéma",
+        "keywords": [
+          "initi",
+          "sortant",
+          "schéma",
+          "schema",
+          "déclarati"
+        ]
+      }
     ],
     "sampleAnswer": "uCentral est le protocole de contrôle entre un AP (ou un switch) et le cloud. Le device ouvre une connexion WebSocket persistante vers le Gateway et échange des messages JSON-RPC : le cloud pousse une configuration déclarative validée par JSON Schema, le device remonte son état et sa télémétrie, et le cloud peut envoyer des commandes (reboot, upgrade, capture).",
     "explanation": "Pour un développeur : une API bidirectionnelle persistante entre un device IoT et un control plane."
@@ -203,14 +338,47 @@
   {
     "id": "q-ow-14",
     "type": "free-response",
-    "concepts": ["control-plane", "data-plane", "ap-nos"],
+    "concepts": [
+      "control-plane",
+      "data-plane",
+      "ap-nos"
+    ],
     "domain": "openwifi",
     "difficulty": 2,
     "prompt": "Pourquoi un AP peut-il continuer à transporter du trafic même si sa connexion au contrôleur cloud est perdue ?",
     "expected": [
-      { "label": "Le contrôleur est le control plane (config/télémétrie)", "keywords": ["control plane", "plan de contrôle", "config", "télémétrie", "contrôleur"] },
-      { "label": "Le data plane est exécuté localement par l’AP (NOS, switch, routeur)", "keywords": ["data plane", "plan de données", "local", "localement", "l’ap lui-même", "sur l’ap", "nos"] },
-      { "label": "Le trafic ne transite pas par le cloud (local breakout)", "keywords": ["breakout", "ne passe pas", "pas par le cloud", "ne transite", "directement"] }
+      {
+        "label": "Le contrôleur est le control plane (config/télémétrie)",
+        "keywords": [
+          "control plane",
+          "plan de contrôle",
+          "config",
+          "télémétrie",
+          "contrôleur"
+        ]
+      },
+      {
+        "label": "Le data plane est exécuté localement par l’AP (NOS, switch, routeur)",
+        "keywords": [
+          "data plane",
+          "plan de données",
+          "local",
+          "localement",
+          "l’ap lui-même",
+          "sur l’ap",
+          "nos"
+        ]
+      },
+      {
+        "label": "Le trafic ne transite pas par le cloud (local breakout)",
+        "keywords": [
+          "breakout",
+          "ne passe pas",
+          "pas par le cloud",
+          "ne transite",
+          "directement"
+        ]
+      }
     ],
     "sampleAnswer": "Le contrôleur cloud ne fait que le control plane : il pousse la configuration et reçoit la télémétrie. Le forwarding du trafic (data plane) est exécuté localement par le logiciel de l’AP, le switch et le routeur du site, en local breakout. Si la connexion uCentral tombe, l’AP garde sa dernière configuration et continue de servir ses clients ; il ne peut simplement plus être reconfiguré ni observé.",
     "explanation": "Séparation control plane / data plane : le cloud décide, le site transporte."
@@ -218,31 +386,37 @@
   {
     "id": "q-ow-15",
     "type": "multiple-choice",
-    "concepts": ["tenant", "owprov"],
+    "concepts": [
+      "tenant",
+      "owprov"
+    ],
     "domain": "openwifi",
     "difficulty": 1,
     "prompt": "Dans une plateforme multi-tenant, à quoi sert la hiérarchie tenant → organisation/site → device ?",
     "choices": [
-      "Isoler les clients d’un fournisseur de services, déléguer l’administration, et faire hériter les profils (SSID, RADIUS, VLAN, RRM) aux devices d’un site",
-      "Attribuer les canaux radio",
-      "Remplacer les VLAN",
-      "Chiffrer le trafic utilisateur"
+      "Remplacer les VLAN : l’isolation des populations se fait par tenant plutôt que par tag 802.1Q",
+      "Isoler les clients d’un fournisseur, déléguer l’administration, et faire hériter les profils (SSID, RADIUS, VLAN, RRM) aux devices d’un site",
+      "Chiffrer le trafic utilisateur : chaque tenant possède sa propre clé, appliquée par ses AP",
+      "Attribuer les canaux radio : chaque site reçoit une plage de canaux disjointe de celle des autres sites"
     ],
-    "answer": 0,
+    "answer": 1,
     "explanation": "Un AP appartient à un site ; le site hérite des profils de son organisation ; le tenant est isolé des autres. C’est ce que Provisioning modélise."
   },
   {
     "id": "q-ow-16",
     "type": "multiple-choice",
-    "concepts": ["firmware", "ucentral"],
+    "concepts": [
+      "firmware",
+      "ucentral"
+    ],
     "domain": "openwifi",
     "difficulty": 2,
     "prompt": "Comment une mise à jour de firmware atteint-elle un AP OpenWiFi ?",
     "choices": [
       "Le Gateway envoie une commande upgrade via uCentral ; l’AP télécharge l’image référencée par OWFMS et redémarre",
-      "L’administrateur doit se connecter en SSH sur chaque AP",
-      "Le serveur RADIUS pousse le firmware",
-      "Le firmware est diffusé dans les beacons"
+      "Le serveur RADIUS pousse le firmware dans un attribut de l’Access-Accept lors de la prochaine authentification",
+      "Le firmware est diffusé par fragments dans les beacons 802.11 et reconstitué par les AP voisins",
+      "L’administrateur se connecte en SSH sur chaque AP et lance la mise à jour depuis la ligne de commande"
     ],
     "answer": 0,
     "explanation": "Commande via le control plane, téléchargement par l’AP, reboot. À planifier hors heures de service : les clients sont coupés pendant le redémarrage."
@@ -250,15 +424,52 @@
   {
     "id": "q-ow-17",
     "type": "free-response",
-    "concepts": ["ztp", "device-certificate", "owprov"],
+    "concepts": [
+      "ztp",
+      "device-certificate",
+      "owprov"
+    ],
     "domain": "openwifi",
     "difficulty": 2,
     "prompt": "Comment un AP peut-il être provisionné depuis le cloud sans intervention sur place ?",
     "expected": [
-      { "label": "Identité d’usine (serial, certificat)", "keywords": ["serial", "certificat", "identité", "usine"] },
-      { "label": "DHCP puis découverte du Gateway via redirector", "keywords": ["dhcp", "redirector", "découvr", "gateway"] },
-      { "label": "Rattachement tenant/site par Provisioning", "keywords": ["tenant", "site", "provisioning", "inventaire", "rattach"] },
-      { "label": "Configuration (et firmware) poussée via uCentral", "keywords": ["config", "ucentral", "pouss", "firmware"] }
+      {
+        "label": "Identité d’usine (serial, certificat)",
+        "keywords": [
+          "serial",
+          "certificat",
+          "identité",
+          "usine"
+        ]
+      },
+      {
+        "label": "DHCP puis découverte du Gateway via redirector",
+        "keywords": [
+          "dhcp",
+          "redirector",
+          "découvr",
+          "gateway"
+        ]
+      },
+      {
+        "label": "Rattachement tenant/site par Provisioning",
+        "keywords": [
+          "tenant",
+          "site",
+          "provisioning",
+          "inventaire",
+          "rattach"
+        ]
+      },
+      {
+        "label": "Configuration (et firmware) poussée via uCentral",
+        "keywords": [
+          "config",
+          "ucentral",
+          "pouss",
+          "firmware"
+        ]
+      }
     ],
     "sampleAnswer": "L’AP sort d’usine avec une identité (serial et certificat). Une fois branché, il obtient une IP par DHCP, contacte un redirector qui lui indique le Gateway de son tenant, ouvre sa connexion uCentral, et Provisioning le rattache à un site dont il hérite la configuration, poussée automatiquement avec le firmware attendu.",
     "explanation": "Zero-touch : identité → réseau → découverte → rattachement → configuration."
