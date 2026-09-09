@@ -2,7 +2,8 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    # La branche de travail reste listée tant que l’environnement github-pages n’autorise pas main.
+    branches: [main, claude/netexperience-academy-prd-cgijv5]
   workflow_dispatch:
 
 permissions:
