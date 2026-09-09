@@ -1,0 +1,428 @@
+[
+  {
+    "id": "osi-model",
+    "name": "Modèle OSI",
+    "aliases": ["OSI", "ISO/IEC 7498-1", "7 couches"],
+    "shortDefinition": "Modèle conceptuel en 7 couches pour situer un protocole réseau et raisonner sur qui dépend de quoi.",
+    "whyItExists": "Pour décomposer un problème réseau en niveaux indépendants : le câble, l’adressage local, l’adressage global, le transport, l’application. Sans carte commune, impossible de dire « le problème est en couche 2 » et être compris.",
+    "whoTalksToWhom": "Chaque couche d’un hôte dialogue logiquement avec la même couche de l’hôte distant, en s’appuyant sur la couche du dessous.",
+    "when": "Toujours. C’est une grille de lecture, pas un événement.",
+    "explanation": "Les 7 couches : 1 Physical (câble, fibre, radio), 2 Data Link (Ethernet, Wi-Fi, MAC, VLAN), 3 Network (IP, routage, ICMP), 4 Transport (TCP, UDP), 5 Session, 6 Presentation, 7 Application (HTTP, DNS, DHCP, RADIUS).\n\nLe modèle OSI est un **modèle conceptuel**, pas une description littérale de toutes les implémentations modernes. ARP, TLS, les tunnels et plusieurs technologies ne rentrent pas parfaitement dans une seule case. Ce qui compte : savoir qu’un problème de couche 2 (association Wi-Fi, VLAN) empêche tout ce qui est au-dessus (DHCP, DNS, HTTP) de fonctionner.",
+    "softwareAnalogy": "Pense à une pile d’abstractions : le protocole HTTP ne sait rien des câbles, comme ton ORM ne sait rien du disque. Chaque couche offre un service à celle du dessus et masque celle du dessous.",
+    "category": "networking",
+    "difficulty": 1,
+    "prerequisites": [],
+    "relatedConcepts": [
+      { "conceptId": "ethernet", "type": "related", "label": "couche 2" },
+      { "conceptId": "ip", "type": "related", "label": "couche 3" },
+      { "conceptId": "tcp", "type": "related", "label": "couche 4" },
+      { "conceptId": "wifi", "type": "related", "label": "couches 1–2" }
+    ],
+    "failureSymptoms": ["Impossible de localiser une panne parce qu’on ne sait pas dans quel ordre les choses doivent fonctionner."],
+    "goDeeper": "Le modèle de référence OSI est défini par ISO/IEC 7498-1. Dans la pratique, la pile TCP/IP (4 couches : Link, Internet, Transport, Application) est le modèle réellement implémenté ; OSI reste le vocabulaire commun (« L2 », « L3 », « L7 »).",
+    "sources": [{ "title": "ISO/IEC 7498-1 — Basic Reference Model", "url": "https://www.iso.org/standard/20269.html", "kind": "iso" }]
+  },
+  {
+    "id": "ip",
+    "name": "IP",
+    "aliases": ["Internet Protocol", "adresse IP"],
+    "shortDefinition": "Protocole de couche 3 qui donne une adresse logique et globale à chaque hôte et permet de router des paquets entre réseaux.",
+    "whyItExists": "Les adresses MAC ne fonctionnent qu’à l’intérieur d’un réseau local. Pour aller d’un réseau à un autre, il faut un adressage hiérarchique (réseau + hôte) que les routeurs peuvent utiliser.",
+    "whoTalksToWhom": "Tout hôte ↔ tout hôte, via des routeurs qui regardent l’adresse IP de destination.",
+    "when": "Dès qu’un client a obtenu une adresse (DHCP) et veut parler à autre chose que son voisin immédiat.",
+    "explanation": "Une adresse IP identifie un hôte **et** le réseau où il se trouve. Le masque (ou le préfixe CIDR) sépare les deux. Si la destination est dans le même sous-réseau, on lui parle directement (via ARP + Ethernet). Sinon, on envoie le paquet à la passerelle (gateway), qui le route.\n\nUn switch décide avec les adresses MAC ; un routeur décide avec les adresses IP.",
+    "softwareAnalogy": "L’adresse IP est comme une adresse postale complète (ville + rue). La MAC est le numéro de série du boîtier aux lettres : unique, mais inutile pour trier le courrier à l’échelle du pays.",
+    "category": "networking",
+    "difficulty": 1,
+    "osiLayers": [3],
+    "prerequisites": ["osi-model"],
+    "relatedConcepts": [
+      { "conceptId": "ipv4", "type": "related" },
+      { "conceptId": "ipv6", "type": "related" },
+      { "conceptId": "subnet", "type": "uses", "label": "est découpé en" },
+      { "conceptId": "gateway", "type": "routes-to", "label": "sort via" },
+      { "conceptId": "ethernet", "type": "runs-over" },
+      { "conceptId": "dhcp", "type": "assigns", "label": "est attribuée par" }
+    ],
+    "failureSymptoms": ["Adresse 169.254.x.x : pas d’IP obtenue.", "Ping vers la gateway OK mais rien au-delà : problème de routage/NAT."],
+    "sources": [{ "title": "RFC 791 — Internet Protocol", "url": "https://www.rfc-editor.org/rfc/rfc791", "kind": "rfc" }]
+  },
+  {
+    "id": "ipv4",
+    "name": "IPv4",
+    "aliases": [],
+    "shortDefinition": "Version d’IP à adresses de 32 bits (ex. 192.168.10.54), encore majoritaire dans les réseaux locaux.",
+    "whyItExists": "Version historique d’IP. L’espace d’adresses (≈ 4,3 milliards) est épuisé, d’où le NAT et les adresses privées.",
+    "explanation": "Notation décimale pointée : quatre nombres de 0 à 255. Les plages privées (RFC 1918) : 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16. Elles ne sont pas routées sur Internet ; le NAT les traduit vers une adresse publique.",
+    "category": "networking",
+    "difficulty": 1,
+    "osiLayers": [3],
+    "prerequisites": ["ip"],
+    "relatedConcepts": [
+      { "conceptId": "nat", "type": "uses", "label": "compensé par" },
+      { "conceptId": "private-ip", "type": "related" },
+      { "conceptId": "arp", "type": "uses", "label": "résolu en MAC par" }
+    ],
+    "sources": [{ "title": "RFC 1918 — Address Allocation for Private Internets", "url": "https://www.rfc-editor.org/rfc/rfc1918", "kind": "rfc" }]
+  },
+  {
+    "id": "ipv6",
+    "name": "IPv6",
+    "aliases": [],
+    "shortDefinition": "Version d’IP à adresses de 128 bits, sans pénurie d’adresses et avec autoconfiguration (SLAAC) et Neighbor Discovery à la place d’ARP.",
+    "whyItExists": "Épuisement des adresses IPv4 et simplification : pas de NAT nécessaire, autoconfiguration native.",
+    "explanation": "Adresses en hexadécimal (2001:db8::1). Chaque interface a une adresse link-local (fe80::/10) utilisée notamment pour parler au routeur. La découverte des voisins (Neighbor Discovery, ND) remplace ARP ; les Router Advertisements (RA) annoncent la passerelle et éventuellement le captive portal (RFC 8910).",
+    "category": "networking",
+    "difficulty": 2,
+    "osiLayers": [3],
+    "prerequisites": ["ip"],
+    "relatedConcepts": [
+      { "conceptId": "arp", "type": "related", "label": "remplacé par Neighbor Discovery" },
+      { "conceptId": "gateway", "type": "uses", "label": "découverte par RA" }
+    ],
+    "sources": [{ "title": "RFC 8200 — IPv6 Specification", "url": "https://www.rfc-editor.org/rfc/rfc8200", "kind": "rfc" }]
+  },
+  {
+    "id": "subnet",
+    "name": "Subnet / CIDR",
+    "aliases": ["sous-réseau", "masque", "CIDR", "préfixe"],
+    "shortDefinition": "Découpage d’un espace IP en réseaux ; la notation /24 dit combien de bits identifient le réseau.",
+    "whyItExists": "Pour savoir si une destination est « locale » (on lui parle directement) ou « distante » (on passe par la gateway), et pour organiser l’adressage (un subnet par VLAN, typiquement).",
+    "whoTalksToWhom": "Chaque hôte compare l’IP de destination à son propre réseau avant d’envoyer.",
+    "when": "À chaque envoi de paquet.",
+    "explanation": "192.168.10.54/24 : les 24 premiers bits (192.168.10) identifient le réseau, les 8 derniers l’hôte. Adresse réseau : 192.168.10.0. Broadcast : 192.168.10.255. Hôtes utilisables : .1 à .254.\n\n192.168.11.20 n’est **pas** dans ce réseau (le troisième octet diffère) : on doit passer par la gateway.\n\nLa précision mathématique doit rester limitée : l’essentiel est le réflexe « même réseau ou pas ? ».",
+    "softwareAnalogy": "Le préfixe CIDR est un namespace. Deux services dans le même namespace se parlent directement ; sinon ils passent par une API gateway.",
+    "category": "networking",
+    "difficulty": 1,
+    "osiLayers": [3],
+    "prerequisites": ["ip"],
+    "relatedConcepts": [
+      { "conceptId": "vlan", "type": "related", "label": "un subnet par VLAN" },
+      { "conceptId": "gateway", "type": "uses", "label": "sort via" },
+      { "conceptId": "dhcp", "type": "related", "label": "scope DHCP par subnet" }
+    ],
+    "failureSymptoms": ["Mauvais masque : des hôtes du même segment ne se voient pas, ou le client croit que la gateway est ailleurs."],
+    "sources": [{ "title": "RFC 4632 — CIDR", "url": "https://www.rfc-editor.org/rfc/rfc4632", "kind": "rfc" }]
+  },
+  {
+    "id": "gateway",
+    "name": "Gateway (passerelle)",
+    "aliases": ["default gateway", "passerelle par défaut"],
+    "shortDefinition": "Le routeur auquel un hôte envoie tout paquet destiné hors de son propre subnet.",
+    "whyItExists": "Un hôte ne connaît pas Internet ; il connaît une seule sortie. Le routeur se charge du reste.",
+    "whoTalksToWhom": "Hôte → gateway (en Ethernet/Wi-Fi, via l’adresse MAC de la gateway obtenue par ARP) → réseaux distants.",
+    "when": "Après DHCP (qui fournit l’adresse de la gateway) et avant tout accès Internet.",
+    "explanation": "Le client apprend l’adresse IP de la gateway par DHCP, résout sa MAC par ARP, puis lui envoie les trames dont l’IP de destination est hors du réseau local. Typiquement, la gateway fait aussi du NAT vers Internet et le routage inter-VLAN.",
+    "category": "networking",
+    "difficulty": 1,
+    "osiLayers": [3],
+    "prerequisites": ["ip", "subnet"],
+    "relatedConcepts": [
+      { "conceptId": "router", "type": "related", "label": "est un" },
+      { "conceptId": "arp", "type": "uses", "label": "MAC résolue par" },
+      { "conceptId": "dhcp", "type": "assigns", "label": "annoncée par" },
+      { "conceptId": "nat", "type": "uses" }
+    ],
+    "failureSymptoms": ["IP obtenue, ping des voisins OK, mais rien ne sort : gateway mauvaise, injoignable ou absente."],
+    "sources": []
+  },
+  {
+    "id": "router",
+    "name": "Router",
+    "aliases": ["routeur"],
+    "shortDefinition": "Équipement de couche 3 qui transfère des paquets entre réseaux IP en fonction de l’adresse IP de destination.",
+    "whyItExists": "Pour relier des réseaux différents (VLAN, sites, Internet) et décider du prochain saut.",
+    "whoTalksToWhom": "Hôtes → routeur → autres réseaux/routeurs.",
+    "when": "Chaque fois qu’un paquet doit quitter son subnet.",
+    "explanation": "Le routeur maintient une table de routage. Il réécrit les en-têtes de couche 2 à chaque saut (nouvelle MAC source/destination) mais conserve les adresses IP (sauf NAT). Différence clé : un **switch** décide avec les MAC (couche 2) ; un **routeur** décide avec les IP (couche 3). Un **AP** est un pont entre Wi-Fi et Ethernet (couche 2).",
+    "category": "networking",
+    "difficulty": 1,
+    "osiLayers": [3],
+    "prerequisites": ["ip"],
+    "relatedConcepts": [
+      { "conceptId": "switch", "type": "related", "label": "≠ décide avec les MAC" },
+      { "conceptId": "gateway", "type": "related" },
+      { "conceptId": "nat", "type": "uses" },
+      { "conceptId": "vlan", "type": "routes-to", "label": "routage inter-VLAN" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "nat",
+    "name": "NAT",
+    "aliases": ["Network Address Translation", "PAT"],
+    "shortDefinition": "Traduction des adresses IP privées d’un réseau en une (ou quelques) adresse publique à la sortie vers Internet.",
+    "whyItExists": "Pénurie d’adresses IPv4 publiques : des centaines de clients partagent une seule adresse publique.",
+    "whoTalksToWhom": "Client (IP privée) → routeur NAT (réécrit source IP/port) → Internet.",
+    "when": "À chaque paquet sortant du réseau privé vers Internet, et pour la réponse correspondante.",
+    "explanation": "Le routeur remplace l’IP source privée par son IP publique et mémorise la correspondance (souvent par port : PAT). Effet secondaire : de l’extérieur on ne peut pas initier une connexion vers un client privé sans règle explicite.",
+    "softwareAnalogy": "Un reverse proxy inversé : un proxy sortant qui multiplexe plusieurs clients derrière une seule adresse et garde une table de sessions.",
+    "category": "networking",
+    "difficulty": 2,
+    "osiLayers": [3, 4],
+    "prerequisites": ["ipv4", "gateway"],
+    "relatedConcepts": [
+      { "conceptId": "private-ip", "type": "uses", "label": "traduit" },
+      { "conceptId": "router", "type": "related", "label": "réalisé par" }
+    ],
+    "failureSymptoms": ["Ping de la gateway OK, ping d’une IP publique KO : NAT ou route par défaut du routeur."],
+    "sources": [{ "title": "RFC 3022 — Traditional NAT", "url": "https://www.rfc-editor.org/rfc/rfc3022", "kind": "rfc" }]
+  },
+  {
+    "id": "private-ip",
+    "name": "IP privée / publique",
+    "aliases": ["RFC 1918", "adresse privée", "adresse publique"],
+    "shortDefinition": "Les IP privées (10.x, 172.16–31.x, 192.168.x) ne sont pas routées sur Internet ; les IP publiques le sont.",
+    "whyItExists": "Économiser les adresses publiques et isoler les réseaux internes.",
+    "explanation": "Un client Wi-Fi reçoit presque toujours une IP privée par DHCP. Pour atteindre Internet, le routeur fait du NAT vers une IP publique.",
+    "category": "networking",
+    "difficulty": 1,
+    "osiLayers": [3],
+    "prerequisites": ["ipv4"],
+    "relatedConcepts": [{ "conceptId": "nat", "type": "depends-on", "label": "nécessite" }],
+    "sources": [{ "title": "RFC 1918", "url": "https://www.rfc-editor.org/rfc/rfc1918", "kind": "rfc" }]
+  },
+  {
+    "id": "tcp",
+    "name": "TCP",
+    "aliases": ["Transmission Control Protocol"],
+    "shortDefinition": "Transport fiable et ordonné, orienté connexion (handshake SYN / SYN-ACK / ACK), utilisé par HTTP, TLS, SSH.",
+    "whyItExists": "IP ne garantit ni la livraison ni l’ordre. TCP ajoute retransmission, ordonnancement, contrôle de flux et de congestion.",
+    "whoTalksToWhom": "Application cliente ↔ application serveur, identifiées par IP + port.",
+    "when": "Après la résolution DNS, avant TLS et HTTP.",
+    "explanation": "Une connexion TCP commence par un handshake en trois temps. Si SYN part mais qu’aucun SYN-ACK ne revient, c’est souvent un pare-feu, un walled garden de captive portal, ou un problème de routage.",
+    "category": "networking",
+    "difficulty": 1,
+    "osiLayers": [4],
+    "prerequisites": ["ip"],
+    "relatedConcepts": [
+      { "conceptId": "udp", "type": "related", "label": "≠ non fiable" },
+      { "conceptId": "ip", "type": "runs-over" },
+      { "conceptId": "dns", "type": "depends-on", "label": "précédé par" }
+    ],
+    "failureSymptoms": ["Timeout de connexion : rien ne revient. Connection refused : le serveur répond mais rien n’écoute."],
+    "sources": [{ "title": "RFC 9293 — TCP", "url": "https://www.rfc-editor.org/rfc/rfc9293", "kind": "rfc" }]
+  },
+  {
+    "id": "udp",
+    "name": "UDP",
+    "aliases": ["User Datagram Protocol"],
+    "shortDefinition": "Transport sans connexion et sans garantie, léger, utilisé par DNS, DHCP, RADIUS, NTP, VoIP.",
+    "whyItExists": "Pour les échanges courts (question/réponse) ou temps réel où la retransmission TCP coûterait plus qu’elle n’apporte.",
+    "explanation": "Pas de handshake, pas d’ordre, pas de retransmission : l’application gère elle-même les réessais. C’est pourquoi RADIUS a ses propres timeouts et retries, et pourquoi un pare-feu qui bloque UDP 1812 se manifeste par un silence, pas par une erreur.",
+    "category": "networking",
+    "difficulty": 1,
+    "osiLayers": [4],
+    "prerequisites": ["ip"],
+    "relatedConcepts": [
+      { "conceptId": "tcp", "type": "related" },
+      { "conceptId": "dns", "type": "encapsulates", "label": "transporte" },
+      { "conceptId": "dhcp", "type": "encapsulates", "label": "transporte" },
+      { "conceptId": "radius", "type": "encapsulates", "label": "transporte" }
+    ],
+    "sources": [{ "title": "RFC 768 — UDP", "url": "https://www.rfc-editor.org/rfc/rfc768", "kind": "rfc" }]
+  },
+  {
+    "id": "icmp",
+    "name": "ICMP",
+    "aliases": ["ping", "traceroute"],
+    "shortDefinition": "Protocole de diagnostic de couche 3 : ping (echo request/reply), « destination unreachable », TTL expiré (traceroute).",
+    "whyItExists": "Pour signaler des erreurs de routage et tester la joignabilité sans application.",
+    "whoTalksToWhom": "Tout hôte ou routeur → tout hôte.",
+    "when": "Pendant le troubleshooting, ou automatiquement quand un routeur ne peut pas livrer un paquet.",
+    "explanation": "`ping 8.8.8.8` teste la connectivité IP jusqu’à Internet sans DNS. `ping google.com` teste **en plus** la résolution DNS. Si le premier marche et pas le second : DNS.",
+    "category": "networking",
+    "difficulty": 1,
+    "osiLayers": [3],
+    "prerequisites": ["ip"],
+    "relatedConcepts": [
+      { "conceptId": "ip", "type": "runs-over" },
+      { "conceptId": "dns", "type": "related", "label": "distingue IP de DNS" }
+    ],
+    "failureSymptoms": ["Certains réseaux filtrent ICMP : un ping qui échoue ne prouve pas toujours une panne."],
+    "sources": [{ "title": "RFC 792 — ICMP", "url": "https://www.rfc-editor.org/rfc/rfc792", "kind": "rfc" }]
+  },
+  {
+    "id": "dns",
+    "name": "DNS",
+    "aliases": ["Domain Name System", "résolution de noms"],
+    "shortDefinition": "Traduit un nom (google.com) en adresse IP (142.x.x.x).",
+    "whyItExists": "Les humains et les applications utilisent des noms ; IP n’utilise que des adresses.",
+    "whoTalksToWhom": "Client → résolveur DNS (adresse fournie par DHCP) → serveurs faisant autorité.",
+    "when": "Avant toute connexion TCP vers un nom, donc après DHCP et avant HTTP.",
+    "explanation": "Le client envoie une requête UDP 53 au résolveur que DHCP lui a donné. Un captive portal intercepte ou répond souvent de façon spéciale au DNS pour rediriger vers le portail.\n\nSymptôme classique : « ping 8.8.8.8 fonctionne, google.com ne fonctionne pas » → DNS.",
+    "softwareAnalogy": "Un service discovery / annuaire : le nom logique est stable, l’adresse physique change.",
+    "category": "networking",
+    "difficulty": 1,
+    "osiLayers": [7],
+    "prerequisites": ["ip", "udp"],
+    "ports": [{ "protocol": "UDP", "port": 53 }, { "protocol": "TCP", "port": 53, "role": "grandes réponses / zone transfer" }],
+    "packetFlow": [
+      { "from": "Client", "to": "Résolveur DNS", "label": "Query A google.com", "note": "Le client demande l’adresse IPv4 (A) ou IPv6 (AAAA)." },
+      { "from": "Résolveur DNS", "to": "Client", "label": "Answer 142.250.x.x", "note": "Le résolveur répond depuis son cache ou après avoir interrogé les serveurs faisant autorité." }
+    ],
+    "relatedConcepts": [
+      { "conceptId": "udp", "type": "runs-over" },
+      { "conceptId": "dhcp", "type": "depends-on", "label": "résolveur fourni par" },
+      { "conceptId": "captive-portal", "type": "related", "label": "souvent intercepté par" },
+      { "conceptId": "tcp", "type": "related", "label": "précède" }
+    ],
+    "failureSymptoms": ["IP obtenue, ping d’une IP publique OK, mais aucun site ne s’ouvre par son nom.", "Le navigateur affiche « DNS_PROBE_FINISHED »."],
+    "sources": [{ "title": "RFC 1035 — Domain Names", "url": "https://www.rfc-editor.org/rfc/rfc1035", "kind": "rfc" }]
+  },
+  {
+    "id": "dhcp",
+    "name": "DHCP",
+    "aliases": ["Dynamic Host Configuration Protocol", "DORA"],
+    "shortDefinition": "Attribue automatiquement la configuration IP (adresse, masque, gateway, DNS) à un client.",
+    "whyItExists": "Sans DHCP, chaque appareil devrait recevoir manuellement son adresse IP, sa passerelle, ses DNS, etc.",
+    "whoTalksToWhom": "Client ↔ serveur DHCP (souvent le routeur, ou un serveur central atteint via un relais DHCP par VLAN).",
+    "when": "Après l’accès au réseau local (association Wi-Fi + authentification réussies) et généralement avant de pouvoir utiliser Internet.",
+    "explanation": "Séquence DORA : **Discover** (broadcast : « y a-t-il un serveur DHCP ? »), **Offer** (« voici une adresse »), **Request** (« je la prends »), **Ack** (« confirmé, voici le bail, la gateway, les DNS »).\n\nDHCP est dépendant du VLAN : le Discover est un broadcast de couche 2, il ne sort pas du VLAN. Si le SSID est mappé sur le mauvais VLAN, le client reçoit une IP du mauvais réseau — ou aucune. Sans réponse, le client s’attribue une adresse 169.254.x.x (APIPA).",
+    "softwareAnalogy": "Le bootstrap de config d’un conteneur : au démarrage il demande à un service central « donne-moi mon identité et mes endpoints ».",
+    "category": "networking",
+    "difficulty": 1,
+    "osiLayers": [7],
+    "prerequisites": ["ip", "udp", "vlan"],
+    "actors": ["Client", "Serveur DHCP", "Relais DHCP (optionnel)"],
+    "ports": [{ "protocol": "UDP", "port": 67, "role": "serveur" }, { "protocol": "UDP", "port": 68, "role": "client" }],
+    "packetFlow": [
+      { "from": "Client", "to": "Serveur DHCP", "label": "Discover (broadcast)", "note": "Le client n’a pas d’IP : il crie sur le réseau local." },
+      { "from": "Serveur DHCP", "to": "Client", "label": "Offer", "note": "Le serveur propose une adresse du scope correspondant au VLAN." },
+      { "from": "Client", "to": "Serveur DHCP", "label": "Request", "note": "Le client accepte l’offre (broadcast, pour informer d’éventuels autres serveurs)." },
+      { "from": "Serveur DHCP", "to": "Client", "label": "Ack", "note": "Bail confirmé : adresse, masque, gateway, DNS, durée." }
+    ],
+    "relatedConcepts": [
+      { "conceptId": "vlan", "type": "depends-on", "label": "broadcast limité au" },
+      { "conceptId": "ip", "type": "assigns" },
+      { "conceptId": "gateway", "type": "assigns", "label": "annonce la" },
+      { "conceptId": "dns", "type": "assigns", "label": "annonce le résolveur" },
+      { "conceptId": "captive-portal", "type": "related", "label": "peut annoncer le portail (RFC 8910)" },
+      { "conceptId": "udp", "type": "runs-over" }
+    ],
+    "failureSymptoms": ["Le client voit le SSID, s’y connecte, mais n’obtient pas d’adresse IP utilisable (169.254.x.x).", "Le client obtient une IP du mauvais réseau : mapping SSID → VLAN ou scope DHCP incorrect."],
+    "goDeeper": "RFC 2131. DHCP utilise un modèle client-serveur pour attribuer les adresses et paramètres réseau. Les options DHCP (option 3 = routeur, 6 = DNS, 114 = captive portal URI) transportent les paramètres. Un relais DHCP (option 82 / giaddr) permet un serveur central pour plusieurs VLAN.",
+    "sources": [
+      { "title": "RFC 2131 — Dynamic Host Configuration Protocol", "url": "https://www.rfc-editor.org/rfc/rfc2131", "kind": "rfc" },
+      { "title": "RFC 8910 — Captive-Portal Identification in DHCP and RA", "url": "https://www.rfc-editor.org/rfc/rfc8910", "kind": "rfc" }
+    ]
+  },
+  {
+    "id": "arp",
+    "name": "ARP",
+    "aliases": ["Address Resolution Protocol", "Neighbor Discovery"],
+    "shortDefinition": "Trouve l’adresse MAC qui correspond à une adresse IP sur le réseau local.",
+    "whyItExists": "Sur Ethernet/Wi-Fi, les trames sont adressées par MAC. Pour envoyer un paquet IP à 192.168.1.1, il faut savoir quelle MAC mettre dans la trame.",
+    "whoTalksToWhom": "Hôte → broadcast à tout le VLAN ; l’hôte concerné → réponse unicast.",
+    "when": "Avant le premier paquet vers un voisin local ou vers la gateway, puis mis en cache quelques minutes.",
+    "explanation": "« Qui possède 192.168.1.1 ? » (broadcast) → « 192.168.1.1 est à AA:BB:CC:DD:EE:FF » (réponse). ARP est à cheval entre couche 2 et 3 : il ne rentre pas parfaitement dans une case OSI. En IPv6, Neighbor Discovery (ICMPv6) joue ce rôle.",
+    "category": "networking",
+    "difficulty": 1,
+    "osiLayers": [2, 3],
+    "prerequisites": ["mac-address", "ip"],
+    "actors": ["Hôte", "Voisin / gateway"],
+    "packetFlow": [
+      { "from": "Hôte", "to": "Gateway", "label": "Who has 192.168.1.1? (broadcast)", "note": "Envoyé à FF:FF:FF:FF:FF:FF : tout le VLAN le reçoit." },
+      { "from": "Gateway", "to": "Hôte", "label": "192.168.1.1 is at AA:BB:CC…", "note": "Réponse unicast ; l’hôte met la correspondance en cache." }
+    ],
+    "relatedConcepts": [
+      { "conceptId": "mac-address", "type": "assigns", "label": "résout vers" },
+      { "conceptId": "ip", "type": "uses" },
+      { "conceptId": "broadcast", "type": "uses" },
+      { "conceptId": "gateway", "type": "related", "label": "MAC de la" }
+    ],
+    "failureSymptoms": ["IP configurée mais gateway injoignable alors qu’elle est « à côté » : ARP bloqué (client isolation), VLAN incorrect."],
+    "sources": [{ "title": "RFC 826 — ARP", "url": "https://www.rfc-editor.org/rfc/rfc826", "kind": "rfc" }]
+  },
+  {
+    "id": "ntp",
+    "name": "NTP",
+    "aliases": ["Network Time Protocol"],
+    "shortDefinition": "Synchronisation de l’heure des équipements via le réseau.",
+    "whyItExists": "Les certificats ont des dates de validité, les logs doivent être corrélés, les événements ordonnés. Un AP avec une horloge fausse peut refuser un certificat valide.",
+    "whoTalksToWhom": "Équipement → serveur NTP (UDP 123).",
+    "when": "Au démarrage de l’AP ou du switch, puis périodiquement.",
+    "explanation": "Un AP OpenWiFi qui démarre avec l’heure 1970 peut échouer à établir sa connexion TLS vers le contrôleur ou à valider un certificat RADIUS. NTP est donc une dépendance cachée de la sécurité et du debugging.",
+    "category": "networking",
+    "difficulty": 1,
+    "osiLayers": [7],
+    "prerequisites": ["udp"],
+    "ports": [{ "protocol": "UDP", "port": 123 }],
+    "relatedConcepts": [
+      { "conceptId": "certificates", "type": "related", "label": "validité dépend de l’heure" },
+      { "conceptId": "logs", "type": "related", "label": "corrélation" }
+    ],
+    "failureSymptoms": ["Erreurs TLS « certificate not yet valid » sur un équipement fraîchement démarré."],
+    "sources": [{ "title": "RFC 5905 — NTPv4", "url": "https://www.rfc-editor.org/rfc/rfc5905", "kind": "rfc" }]
+  },
+  {
+    "id": "mac-address",
+    "name": "Adresse MAC",
+    "aliases": ["MAC", "adresse physique", "hardware address"],
+    "shortDefinition": "Identifiant de 48 bits d’une interface réseau (Ethernet ou Wi-Fi), utilisé pour adresser les trames sur le réseau local.",
+    "whyItExists": "Il faut une adresse de couche 2 pour livrer une trame au bon voisin sur un segment partagé.",
+    "explanation": "Format AA:BB:CC:DD:EE:FF. Les 3 premiers octets identifient le fabricant (OUI). Un switch apprend les MAC vues sur chaque port. Un AP identifie chaque client Wi-Fi par sa MAC ; un captive portal ou une liste mPSK repose souvent sur elle. Attention : les téléphones modernes utilisent des MAC aléatoires par SSID.",
+    "softwareAnalogy": "Un identifiant d’instance local (comme un container ID) : unique sur l’hôte, mais non routable globalement.",
+    "category": "networking",
+    "difficulty": 1,
+    "osiLayers": [2],
+    "prerequisites": [],
+    "relatedConcepts": [
+      { "conceptId": "ethernet", "type": "belongs-to-layer", "label": "adresse des trames" },
+      { "conceptId": "switch", "type": "related", "label": "apprise par" },
+      { "conceptId": "ip", "type": "related", "label": "≠ adresse logique" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "frame",
+    "name": "Frame / Packet",
+    "aliases": ["trame", "paquet", "encapsulation"],
+    "shortDefinition": "Une trame est l’unité de couche 2 (Ethernet, 802.11) ; elle encapsule un paquet IP (couche 3), qui encapsule un segment TCP/UDP, qui transporte les données applicatives.",
+    "whyItExists": "Chaque couche ajoute son en-tête pour ses propres besoins : MAC pour le voisin, IP pour le routage, port pour l’application.",
+    "explanation": "Exemple d’un Access-Request RADIUS envoyé par un AP : [Ethernet: MAC AP → MAC gateway] [IP: AP → serveur RADIUS] [UDP: 1812] [RADIUS: Access-Request]. À chaque saut de routeur, l’en-tête Ethernet change ; l’en-tête IP reste.",
+    "category": "networking",
+    "difficulty": 1,
+    "osiLayers": [2, 3],
+    "prerequisites": ["osi-model"],
+    "relatedConcepts": [
+      { "conceptId": "ethernet", "type": "related" },
+      { "conceptId": "ip", "type": "encapsulates" },
+      { "conceptId": "mtu", "type": "related", "label": "taille max" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "mtu",
+    "name": "MTU",
+    "aliases": ["Maximum Transmission Unit", "fragmentation"],
+    "shortDefinition": "Taille maximale d’un paquet sur un lien (1500 octets sur Ethernet standard).",
+    "whyItExists": "Les liens ont des limites physiques ; les tunnels (VPN, VLAN tag, GRE) réduisent la place disponible.",
+    "explanation": "Un paquet trop grand est fragmenté ou rejeté. Symptôme typique : le ping passe, les petites pages s’ouvrent, mais les gros transferts bloquent. Concept secondaire pour ce cours.",
+    "category": "networking",
+    "difficulty": 2,
+    "osiLayers": [2, 3],
+    "prerequisites": ["frame"],
+    "relatedConcepts": [{ "conceptId": "frame", "type": "related" }],
+    "failureSymptoms": ["Petites requêtes OK, gros téléchargements ou certains sites qui « pendent »."],
+    "sources": []
+  },
+  {
+    "id": "broadcast",
+    "name": "Broadcast / Unicast",
+    "aliases": ["broadcast domain", "domaine de diffusion", "multicast"],
+    "shortDefinition": "Unicast : une trame vers un destinataire. Broadcast : vers tous les hôtes du même VLAN (domaine de diffusion).",
+    "whyItExists": "Certains protocoles doivent parler à « tout le monde » avant de connaître leur interlocuteur (ARP, DHCP Discover).",
+    "explanation": "Le domaine de broadcast est délimité par le VLAN : un routeur ne relaie pas les broadcasts. C’est pourquoi un VLAN = un subnet = un scope DHCP, et pourquoi trop de clients dans un même VLAN dégradent le Wi-Fi (les broadcasts sont envoyés à faible débit en 802.11).",
+    "category": "networking",
+    "difficulty": 1,
+    "osiLayers": [2],
+    "prerequisites": ["ethernet"],
+    "relatedConcepts": [
+      { "conceptId": "vlan", "type": "related", "label": "délimite le domaine" },
+      { "conceptId": "arp", "type": "related", "label": "utilisé par" },
+      { "conceptId": "dhcp", "type": "related", "label": "Discover est un" }
+    ],
+    "sources": []
+  }
+]

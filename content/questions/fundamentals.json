@@ -1,0 +1,556 @@
+[
+  {
+    "id": "q-osi-01",
+    "type": "layer",
+    "concepts": ["osi-model", "ip", "tcp", "ethernet"],
+    "domain": "fundamentals",
+    "difficulty": 1,
+    "prompt": "Place chaque protocole sur sa couche OSI.",
+    "items": [
+      { "label": "HTTP", "layers": [7] },
+      { "label": "TCP", "layers": [4] },
+      { "label": "IP", "layers": [3] },
+      { "label": "Ethernet", "layers": [2] },
+      { "label": "802.11 (Wi-Fi)", "layers": [1, 2] },
+      { "label": "Radio / câble", "layers": [1] }
+    ],
+    "explanation": "HTTP est applicatif (7), TCP transport (4), IP réseau (3). Ethernet et 802.11 couvrent la liaison (2) et le physique (1) : ils définissent à la fois le signal et le format de trame."
+  },
+  {
+    "id": "q-osi-02",
+    "type": "layer",
+    "concepts": ["osi-model", "dhcp", "dns", "radius", "udp", "vlan"],
+    "domain": "fundamentals",
+    "difficulty": 2,
+    "prompt": "Place ces protocoles d’infrastructure sur leur couche OSI.",
+    "items": [
+      { "label": "DHCP", "layers": [7] },
+      { "label": "DNS", "layers": [7] },
+      { "label": "RADIUS", "layers": [7] },
+      { "label": "UDP", "layers": [4] },
+      { "label": "VLAN (802.1Q)", "layers": [2] },
+      { "label": "ARP", "layers": [2, 3] }
+    ],
+    "explanation": "DHCP, DNS et RADIUS sont des protocoles applicatifs (7) transportés par UDP (4). Le tag VLAN fait partie de la trame Ethernet (2). ARP est à cheval entre 2 et 3 : il résout une adresse de couche 3 en adresse de couche 2."
+  },
+  {
+    "id": "q-osi-03",
+    "type": "multiple-choice",
+    "concepts": ["osi-model"],
+    "domain": "fundamentals",
+    "difficulty": 1,
+    "prompt": "Que signifie « OSI » et qui définit ce modèle ?",
+    "choices": [
+      "Open Systems Interconnection, défini par l’ISO (ISO/IEC 7498-1)",
+      "Open Source Internet, défini par l’IETF",
+      "Operating System Interface, défini par l’IEEE",
+      "Optical Signal Interface, défini par l’ITU"
+    ],
+    "answer": 0,
+    "explanation": "OSI = Open Systems Interconnection. C’est un modèle de référence de l’ISO (ISO/IEC 7498-1). « OSI » et « ISO » vont ensemble : le modèle OSI est publié par l’ISO."
+  },
+  {
+    "id": "q-osi-04",
+    "type": "multiple-choice",
+    "concepts": ["osi-model", "switch", "router"],
+    "domain": "fundamentals",
+    "difficulty": 1,
+    "prompt": "Un switch et un routeur prennent leurs décisions de transfert à partir de quelles informations ?",
+    "choices": [
+      "Switch : adresse MAC (couche 2) ; routeur : adresse IP (couche 3)",
+      "Switch : adresse IP ; routeur : adresse MAC",
+      "Les deux utilisent l’adresse IP",
+      "Les deux utilisent le port TCP"
+    ],
+    "answer": 0,
+    "explanation": "Un switch apprend et utilise les adresses MAC (couche 2). Un routeur consulte sa table de routage avec l’adresse IP de destination (couche 3)."
+  },
+  {
+    "id": "q-osi-05",
+    "type": "multiple-choice",
+    "concepts": ["osi-model"],
+    "domain": "fundamentals",
+    "difficulty": 2,
+    "prompt": "Un client Wi-Fi est associé à l’AP (bon signal) mais n’obtient pas d’adresse IP. Qu’est-ce qui est certainement vrai ?",
+    "choices": [
+      "Le problème est en couche 3 ou en dessous (VLAN/DHCP) ; DNS et HTTP ne sont pas encore en cause",
+      "Le problème est en DNS",
+      "Le problème est en couche 7",
+      "Le problème est forcément la radio"
+    ],
+    "answer": 0,
+    "explanation": "Une couche ne fonctionne que si celles du dessous fonctionnent. Sans IP, il est inutile de regarder DNS ou HTTP. L’association (couche 2 radio) est OK ; il reste l’authentification, le VLAN et DHCP."
+  },
+  {
+    "id": "q-osi-06",
+    "type": "free-response",
+    "concepts": ["osi-model", "mac-address", "ip"],
+    "domain": "fundamentals",
+    "difficulty": 1,
+    "prompt": "Explique en deux phrases la différence entre une adresse MAC et une adresse IP.",
+    "expected": [
+      { "label": "MAC = couche 2, identifiant local de l’interface", "keywords": ["couche 2", "layer 2", "local", "interface", "physique", "fabricant", "carte"] },
+      { "label": "IP = couche 3, adresse logique routable entre réseaux", "keywords": ["couche 3", "layer 3", "rout", "logique", "réseau à", "entre réseaux", "internet"] },
+      { "label": "Le switch utilise la MAC, le routeur l’IP", "keywords": ["switch", "routeur", "router"] }
+    ],
+    "sampleAnswer": "L’adresse MAC identifie une interface sur le réseau local (couche 2) ; c’est ce que le switch utilise pour livrer une trame. L’adresse IP est une adresse logique et hiérarchique (couche 3) qui permet aux routeurs d’acheminer un paquet d’un réseau à un autre.",
+    "explanation": "Les deux adresses coexistent : la MAC change à chaque saut de routeur, l’IP reste de bout en bout (hors NAT)."
+  },
+  {
+    "id": "q-net-10",
+    "type": "ordering",
+    "concepts": ["association", "dhcp", "arp", "dns", "tcp"],
+    "domain": "fundamentals",
+    "difficulty": 2,
+    "prompt": "Remets dans l’ordre les étapes d’un téléphone qui se connecte à un Wi-Fi domestique (WPA2-Personal) et ouvre google.com.",
+    "items": ["Scan et sélection du SSID", "Association 802.11", "4-way handshake WPA2 (PSK)", "DHCP (Discover / Offer / Request / Ack)", "ARP vers la gateway", "Requête DNS pour google.com", "Connexion TCP puis TLS / HTTP"],
+    "explanation": "D’abord la couche 2 (scan, association, sécurité), puis l’adresse IP (DHCP), puis la MAC de la gateway (ARP), puis la résolution du nom (DNS), puis la connexion applicative."
+  },
+  {
+    "id": "q-net-11",
+    "type": "multiple-choice",
+    "concepts": ["udp", "tcp", "radius", "dhcp"],
+    "domain": "fundamentals",
+    "difficulty": 2,
+    "prompt": "DHCP, DNS et RADIUS utilisent UDP. Quelle conséquence pratique pour le troubleshooting ?",
+    "choices": [
+      "Une panne se manifeste par un silence (timeout) plutôt que par un message d’erreur de connexion",
+      "Ces protocoles sont chiffrés par défaut",
+      "Ils nécessitent un handshake en trois temps avant chaque requête",
+      "Ils ne peuvent pas traverser un routeur"
+    ],
+    "answer": 0,
+    "explanation": "UDP est sans connexion : si le serveur ne répond pas (down, pare-feu), le client attend puis abandonne. Pas de « connection refused » explicite, juste un timeout."
+  },
+  {
+    "id": "q-net-12",
+    "type": "matching",
+    "concepts": ["tcp", "udp", "icmp", "dns", "radius"],
+    "domain": "fundamentals",
+    "difficulty": 2,
+    "prompt": "Associe chaque protocole à son transport / sa nature.",
+    "pairs": [
+      { "left": "HTTP / TLS", "right": "TCP" },
+      { "left": "DNS (requêtes courantes)", "right": "UDP 53" },
+      { "left": "RADIUS authentication", "right": "UDP 1812" },
+      { "left": "ping", "right": "ICMP" },
+      { "left": "DHCP", "right": "UDP 67/68" }
+    ],
+    "explanation": "HTTP et TLS ont besoin d’un flux fiable (TCP). DNS, RADIUS et DHCP sont des échanges courts en UDP. Ping utilise ICMP directement sur IP."
+  },
+  {
+    "id": "q-net-13",
+    "type": "matching",
+    "concepts": ["arp", "dhcp", "dns", "ntp", "icmp"],
+    "domain": "fundamentals",
+    "difficulty": 1,
+    "prompt": "Qui fait quoi ? Associe chaque protocole à sa fonction.",
+    "pairs": [
+      { "left": "ARP", "right": "Trouver la MAC correspondant à une IP locale" },
+      { "left": "DHCP", "right": "Attribuer adresse IP, gateway et DNS au client" },
+      { "left": "DNS", "right": "Traduire un nom en adresse IP" },
+      { "left": "NTP", "right": "Synchroniser l’heure" },
+      { "left": "ICMP", "right": "Diagnostic : ping, unreachable" }
+    ],
+    "explanation": "Quatre briques invisibles mais indispensables entre « associé au Wi-Fi » et « Internet fonctionne »."
+  },
+  {
+    "id": "q-eth-01",
+    "type": "multiple-choice",
+    "concepts": ["switch", "mac-address"],
+    "domain": "fundamentals",
+    "difficulty": 1,
+    "prompt": "Un switch reçoit une trame dont la MAC de destination est inconnue de sa table. Que fait-il ?",
+    "choices": [
+      "Il la transmet sur tous les ports du même VLAN sauf celui d’origine (flooding)",
+      "Il la jette",
+      "Il l’envoie au routeur",
+      "Il demande à DHCP"
+    ],
+    "answer": 0,
+    "explanation": "Sans entrée dans la table MAC, le switch inonde le VLAN. Dès que la destination répond, il apprend son port. Les broadcasts sont traités de la même façon."
+  },
+  {
+    "id": "q-eth-02",
+    "type": "matching",
+    "concepts": ["stp", "lldp", "poe", "lacp"],
+    "domain": "fundamentals",
+    "difficulty": 2,
+    "prompt": "Associe chaque protocole de switching à son rôle.",
+    "pairs": [
+      { "left": "STP / RSTP", "right": "Empêcher les boucles de couche 2" },
+      { "left": "LLDP", "right": "Découvrir le voisin direct (quel AP sur quel port)" },
+      { "left": "PoE", "right": "Alimenter l’AP par le câble Ethernet" },
+      { "left": "LACP", "right": "Agréger plusieurs liens en un" },
+      { "left": "802.1Q", "right": "Taguer les trames avec un VLAN ID" }
+    ],
+    "explanation": "Concepts à reconnaître dans une conversation ou une console OpenLAN, sans avoir à les configurer en détail."
+  },
+  {
+    "id": "q-eth-03",
+    "type": "multiple-choice",
+    "concepts": ["poe", "access-point"],
+    "domain": "fundamentals",
+    "difficulty": 2,
+    "prompt": "Un AP Wi-Fi 6E redémarre en boucle ou ne diffuse que sa radio 2.4 GHz. Quelle cause matérielle vérifier en premier ?",
+    "choices": [
+      "Le budget ou la classe PoE du port du switch est insuffisant pour cet AP",
+      "Le VLAN du SSID est incorrect",
+      "Le serveur RADIUS est injoignable",
+      "Le DNS est mal configuré"
+    ],
+    "answer": 0,
+    "explanation": "Un AP gourmand sur un port 802.3af (15 W) manque de puissance : il peut désactiver une radio ou redémarrer. Le VLAN, RADIUS ou DNS n’affectent pas l’alimentation."
+  },
+  {
+    "id": "q-eth-04",
+    "type": "multiple-choice",
+    "concepts": ["broadcast", "vlan"],
+    "domain": "fundamentals",
+    "difficulty": 2,
+    "prompt": "Qu’est-ce qui délimite un domaine de broadcast ?",
+    "choices": [
+      "Le VLAN : un broadcast atteint tous les hôtes du VLAN et n’est pas relayé par le routeur",
+      "Le SSID uniquement",
+      "Le subnet DNS",
+      "La bande de fréquence"
+    ],
+    "answer": 0,
+    "explanation": "Le VLAN est le domaine de broadcast. C’est pourquoi ARP et DHCP Discover (des broadcasts) restent confinés au VLAN, et pourquoi un VLAN correspond à un subnet."
+  },
+  {
+    "id": "q-eth-05",
+    "type": "multiple-choice",
+    "concepts": ["ethernet", "wifi", "access-point"],
+    "domain": "fundamentals",
+    "difficulty": 1,
+    "prompt": "Quel est le rôle d’un AP par rapport à Ethernet ?",
+    "choices": [
+      "Il fait le pont (couche 2) entre les trames 802.11 des clients et les trames Ethernet du switch",
+      "Il route les paquets IP entre les clients et Internet",
+      "Il attribue les adresses IP",
+      "Il remplace le routeur"
+    ],
+    "answer": 0,
+    "explanation": "L’AP est un pont couche 2 : il convertit les trames Wi-Fi en trames Ethernet (et les tague avec le VLAN du SSID). Il ne route pas et n’attribue pas d’IP."
+  },
+  {
+    "id": "q-eth-06",
+    "type": "free-response",
+    "concepts": ["switch", "router", "access-point"],
+    "domain": "fundamentals",
+    "difficulty": 2,
+    "prompt": "Explique la différence entre un AP, un switch et un routeur.",
+    "expected": [
+      { "label": "AP : pont radio ↔ Ethernet, couche 2", "keywords": ["radio", "sans fil", "wi-fi", "pont", "bridge"] },
+      { "label": "Switch : transfère les trames selon la MAC", "keywords": ["mac", "trame", "couche 2"] },
+      { "label": "Routeur : transfère les paquets selon l’IP, entre réseaux", "keywords": ["ip", "entre réseaux", "rout", "couche 3", "subnet"] }
+    ],
+    "sampleAnswer": "L’AP fait le pont entre les clients radio et le réseau filaire (couche 2). Le switch relie les hôtes d’un réseau local et transfère les trames en fonction des adresses MAC. Le routeur relie des réseaux différents (VLAN, Internet) et transfère les paquets en fonction des adresses IP.",
+    "explanation": "Trois équipements, trois niveaux de décision : radio/pont, MAC, IP."
+  },
+  {
+    "id": "q-ip-01",
+    "type": "multiple-choice",
+    "concepts": ["subnet", "ipv4"],
+    "domain": "fundamentals",
+    "difficulty": 1,
+    "prompt": "Pour l’hôte 192.168.10.54/24, quelle est l’adresse du réseau ?",
+    "choices": ["192.168.10.0", "192.168.10.1", "192.168.0.0", "192.168.10.255"],
+    "answer": 0,
+    "explanation": "/24 : les trois premiers octets identifient le réseau → 192.168.10.0. Le .1 est souvent la gateway, le .255 est le broadcast."
+  },
+  {
+    "id": "q-ip-02",
+    "type": "multiple-choice",
+    "concepts": ["subnet", "gateway"],
+    "domain": "fundamentals",
+    "difficulty": 1,
+    "prompt": "192.168.10.54/24 veut parler à 192.168.11.20. Est-ce local ? Faut-il passer par la gateway ?",
+    "choices": [
+      "Non local (troisième octet différent) → passer par la gateway",
+      "Local → parler directement via ARP",
+      "Impossible : adresses privées",
+      "Local, car les deux commencent par 192.168"
+    ],
+    "answer": 0,
+    "explanation": "Avec /24, 192.168.10.x et 192.168.11.x sont deux réseaux différents. L’hôte envoie donc le paquet à sa gateway, dont il résout la MAC par ARP."
+  },
+  {
+    "id": "q-ip-03",
+    "type": "multiple-choice",
+    "concepts": ["subnet"],
+    "domain": "fundamentals",
+    "difficulty": 1,
+    "prompt": "Quelle est l’adresse de broadcast du réseau 192.168.10.0/24 ?",
+    "choices": ["192.168.10.255", "192.168.10.0", "255.255.255.0", "192.168.255.255"],
+    "answer": 0,
+    "explanation": "Tous les bits hôte à 1 : 192.168.10.255. 255.255.255.0 est le masque, pas une adresse de broadcast."
+  },
+  {
+    "id": "q-ip-04",
+    "type": "multiple-choice",
+    "concepts": ["gateway", "dhcp", "arp"],
+    "domain": "fundamentals",
+    "difficulty": 2,
+    "prompt": "Comment un client connaît-il l’adresse IP de sa gateway, puis son adresse MAC ?",
+    "choices": [
+      "IP par DHCP (option routeur), MAC par ARP",
+      "IP par DNS, MAC par DHCP",
+      "IP par ARP, MAC par DNS",
+      "Les deux par le beacon Wi-Fi"
+    ],
+    "answer": 0,
+    "explanation": "DHCP fournit l’adresse de la gateway dans l’Ack. Le client résout ensuite sa MAC par une requête ARP en broadcast."
+  },
+  {
+    "id": "q-ip-05",
+    "type": "troubleshooting",
+    "concepts": ["nat", "gateway", "router"],
+    "domain": "fundamentals",
+    "difficulty": 2,
+    "prompt": "IP obtenue. `ping 192.168.20.1` (gateway) répond. `ping 8.8.8.8` ne répond pas. Où chercher ?",
+    "choices": [
+      "Routage / NAT / lien WAN du routeur",
+      "Association Wi-Fi",
+      "DHCP",
+      "DNS"
+    ],
+    "answer": 0,
+    "explanation": "La couche 2, l’IP et la gateway sont OK. Le paquet ne va pas au-delà du routeur : route par défaut, NAT ou lien Internet. DNS n’est pas en cause puisqu’on pingue une IP."
+  },
+  {
+    "id": "q-ip-06",
+    "type": "multiple-choice",
+    "concepts": ["nat", "private-ip"],
+    "domain": "fundamentals",
+    "difficulty": 1,
+    "prompt": "Pourquoi un client Wi-Fi avec l’adresse 10.20.0.117 peut-il quand même atteindre Internet ?",
+    "choices": [
+      "Le routeur fait du NAT : il remplace l’adresse privée par son adresse publique en sortie",
+      "10.20.0.117 est une adresse publique",
+      "Le DNS traduit l’adresse",
+      "L’AP tunnelise le trafic vers le cloud"
+    ],
+    "answer": 0,
+    "explanation": "10.x.x.x est privé (RFC 1918), non routé sur Internet. Le NAT du routeur traduit vers une IP publique et mémorise la correspondance pour la réponse."
+  },
+  {
+    "id": "q-ip-07",
+    "type": "multiple-choice",
+    "concepts": ["ipv6", "arp"],
+    "domain": "fundamentals",
+    "difficulty": 2,
+    "prompt": "En IPv6, quel mécanisme remplace ARP ?",
+    "choices": ["Neighbor Discovery (ICMPv6)", "DHCPv6 uniquement", "DNS AAAA", "STP"],
+    "answer": 0,
+    "explanation": "Neighbor Discovery (ND, via ICMPv6) résout les adresses des voisins et découvre les routeurs (Router Advertisement). DHCPv6 est optionnel."
+  },
+  {
+    "id": "q-dhcp-01",
+    "type": "ordering",
+    "concepts": ["dhcp"],
+    "domain": "fundamentals",
+    "difficulty": 1,
+    "prompt": "Remets les quatre messages DHCP dans l’ordre.",
+    "items": ["Discover", "Offer", "Request", "Ack"],
+    "explanation": "DORA : Discover (client, broadcast), Offer (serveur), Request (client), Ack (serveur)."
+  },
+  {
+    "id": "q-dhcp-02",
+    "type": "multiple-choice",
+    "concepts": ["dhcp"],
+    "domain": "fundamentals",
+    "difficulty": 1,
+    "prompt": "Un client affiche l’adresse 169.254.23.7. Que s’est-il passé ?",
+    "choices": [
+      "Aucun serveur DHCP n’a répondu ; le client s’est auto-attribué une adresse link-local (APIPA)",
+      "Le serveur DHCP a donné une adresse du VLAN de management",
+      "C’est l’adresse normale d’un réseau Guest",
+      "Le DNS a échoué"
+    ],
+    "answer": 0,
+    "explanation": "169.254.x.x est la plage d’auto-configuration utilisée quand DHCP échoue. Suspect : VLAN (le Discover n’atteint pas le serveur) ou serveur DHCP."
+  },
+  {
+    "id": "q-dhcp-03",
+    "type": "multiple-choice",
+    "concepts": ["dhcp", "vlan", "broadcast"],
+    "domain": "fundamentals",
+    "difficulty": 2,
+    "prompt": "Pourquoi DHCP dépend-il directement du VLAN dans lequel l’AP place le client ?",
+    "choices": [
+      "Le Discover est un broadcast de couche 2 qui ne sort pas du VLAN ; seul le serveur (ou relais) de ce VLAN répond",
+      "DHCP utilise le VLAN ID comme adresse IP",
+      "Le serveur DHCP est toujours dans l’AP",
+      "Il n’y a aucun lien entre DHCP et VLAN"
+    ],
+    "answer": 0,
+    "explanation": "Mauvais VLAN → le broadcast atteint le mauvais scope DHCP (IP du mauvais réseau) ou aucun serveur (169.254.x.x)."
+  },
+  {
+    "id": "q-arp-01",
+    "type": "multiple-choice",
+    "concepts": ["arp"],
+    "domain": "fundamentals",
+    "difficulty": 1,
+    "prompt": "À quoi sert ARP ?",
+    "choices": [
+      "À trouver l’adresse MAC correspondant à une adresse IP sur le réseau local",
+      "À trouver l’adresse IP correspondant à un nom",
+      "À attribuer une adresse IP",
+      "À chiffrer les trames"
+    ],
+    "answer": 0,
+    "explanation": "« Qui possède 192.168.1.1 ? » (broadcast) → « 192.168.1.1 est à AA:BB:CC… ». Nécessaire avant d’envoyer un paquet IP à un voisin ou à la gateway."
+  },
+  {
+    "id": "q-arp-02",
+    "type": "multiple-choice",
+    "concepts": ["arp", "broadcast", "gateway"],
+    "domain": "fundamentals",
+    "difficulty": 2,
+    "prompt": "Un client a une IP correcte mais ne peut pas joindre sa gateway, pourtant « juste à côté ». Quelle hypothèse liée à ARP ?",
+    "choices": [
+      "Le broadcast ARP n’atteint pas la gateway : mauvais VLAN, ou isolation client sur le SSID qui bloque ARP",
+      "Le DNS est mal configuré",
+      "Le certificat RADIUS est expiré",
+      "La bande 6 GHz n’est pas supportée"
+    ],
+    "answer": 0,
+    "explanation": "Sans réponse ARP, aucune trame ne peut être adressée à la gateway. Vérifier que client et gateway sont dans le même VLAN et que rien ne filtre le broadcast."
+  },
+  {
+    "id": "q-dns-01",
+    "type": "troubleshooting",
+    "concepts": ["dns", "icmp"],
+    "domain": "fundamentals",
+    "difficulty": 1,
+    "prompt": "IP obtenue. `ping 8.8.8.8` fonctionne. `ping google.com` échoue. Où est le problème ?",
+    "choices": ["DNS", "DHCP", "Association Wi-Fi", "NAT"],
+    "answer": 0,
+    "explanation": "La connectivité IP jusqu’à Internet est prouvée par le ping vers 8.8.8.8. Seule la résolution des noms échoue : le résolveur (fourni par DHCP) est injoignable ou incorrect."
+  },
+  {
+    "id": "q-dns-02",
+    "type": "multiple-choice",
+    "concepts": ["dns", "dhcp", "captive-portal"],
+    "domain": "fundamentals",
+    "difficulty": 2,
+    "prompt": "D’où vient l’adresse du résolveur DNS qu’utilise un client Wi-Fi ?",
+    "choices": [
+      "De l’Ack DHCP (option DNS)",
+      "Du beacon de l’AP",
+      "Du serveur RADIUS",
+      "Elle est toujours 8.8.8.8"
+    ],
+    "answer": 0,
+    "explanation": "DHCP fournit adresse, masque, gateway et DNS. Un captive portal contrôle souvent ce DNS pour rediriger vers le portail."
+  },
+  {
+    "id": "q-ntp-01",
+    "type": "multiple-choice",
+    "concepts": ["ntp", "certificates"],
+    "domain": "fundamentals",
+    "difficulty": 2,
+    "prompt": "Pourquoi NTP est-il important pour un AP géré depuis le cloud avec 802.1X ?",
+    "choices": [
+      "Les certificats (TLS vers le cloud, RADIUS, EAP-TLS) ont des dates de validité, et les logs doivent être corrélés",
+      "NTP attribue les canaux radio",
+      "NTP est nécessaire au DHCP",
+      "Sans NTP, le SSID n’est pas diffusé"
+    ],
+    "answer": 0,
+    "explanation": "Un AP dont l’horloge est fausse peut refuser un certificat valide (« not yet valid ») ou échouer sa connexion TLS au contrôleur. Les événements deviennent aussi impossibles à corréler."
+  },
+  {
+    "id": "q-vlan-01",
+    "type": "multiple-choice",
+    "concepts": ["vlan"],
+    "domain": "fundamentals",
+    "difficulty": 1,
+    "prompt": "Pourquoi un réseau utilise-t-il des VLAN ?",
+    "choices": [
+      "Isoler des populations (Corporate, Guest, IoT) sur la même infrastructure physique, limiter les broadcasts, appliquer des politiques différentes",
+      "Augmenter la portée du Wi-Fi",
+      "Remplacer DHCP",
+      "Chiffrer le trafic"
+    ],
+    "answer": 0,
+    "explanation": "Trois réseaux logiques sur un seul matériel : chaque VLAN a son subnet, son DHCP, ses règles. Le routeur contrôle ce qui passe entre eux."
+  },
+  {
+    "id": "q-vlan-02",
+    "type": "matching",
+    "concepts": ["vlan", "trunk"],
+    "domain": "fundamentals",
+    "difficulty": 2,
+    "prompt": "Associe chaque terme VLAN à sa définition.",
+    "pairs": [
+      { "left": "Access port (untagged)", "right": "Port appartenant à un seul VLAN, trames sans tag" },
+      { "left": "Trunk (tagged)", "right": "Port transportant plusieurs VLAN avec tags 802.1Q" },
+      { "left": "VLAN ID", "right": "Numéro 1–4094 dans le tag" },
+      { "left": "Routage inter-VLAN", "right": "Passage d’un VLAN à un autre via un routeur" },
+      { "left": "Native VLAN", "right": "VLAN dont les trames circulent sans tag sur un trunk" }
+    ],
+    "explanation": "Vers un PC : access. Vers un AP multi-SSID ou un autre switch : trunk."
+  },
+  {
+    "id": "q-vlan-03",
+    "type": "multiple-choice",
+    "concepts": ["vlan", "trunk", "access-point"],
+    "domain": "fundamentals",
+    "difficulty": 2,
+    "prompt": "Un AP diffuse trois SSID mappés sur les VLAN 10, 20 et 30. Comment doit être configuré le port du switch vers cet AP ?",
+    "choices": [
+      "En trunk, autorisant les VLAN 10, 20 et 30",
+      "En access port VLAN 10",
+      "En access port VLAN 1",
+      "Peu importe : l’AP gère les VLAN tout seul"
+    ],
+    "answer": 0,
+    "explanation": "L’AP tague les trames de chaque SSID avec son VLAN ; le port doit être un trunk qui accepte ces tags. Un VLAN manquant sur le trunk = un SSID sans DHCP."
+  },
+  {
+    "id": "q-vlan-04",
+    "type": "ordering",
+    "concepts": ["ssid", "vlan", "trunk", "subnet", "dhcp"],
+    "domain": "fundamentals",
+    "difficulty": 2,
+    "prompt": "Remets dans l’ordre la chaîne logique qui mène un client Guest à son adresse IP.",
+    "items": ["Le client s’associe au SSID Guest", "L’AP tague les trames du client avec le VLAN 20", "Le trunk vers le switch transporte le VLAN 20", "Le broadcast DHCP Discover reste dans le VLAN 20", "Le serveur DHCP du VLAN 20 offre une adresse du subnet 10.20.0.0/24"],
+    "explanation": "SSID → VLAN → trunk → domaine de broadcast → scope DHCP → subnet. Chaque maillon doit être cohérent."
+  },
+  {
+    "id": "q-vlan-05",
+    "type": "troubleshooting",
+    "concepts": ["vlan", "ssid", "dhcp"],
+    "domain": "fundamentals",
+    "difficulty": 2,
+    "prompt": "Les utilisateurs du SSID Guest reçoivent des IP du réseau Corporate. Suspect principal ?",
+    "choices": [
+      "Mapping SSID → VLAN : Guest est placé dans le VLAN Corporate",
+      "Serveur RADIUS",
+      "Signal radio trop faible",
+      "DNS"
+    ],
+    "answer": 0,
+    "explanation": "Le Wi-Fi fonctionne, DHCP fonctionne — mais dans le mauvais VLAN. C’est une erreur de configuration SSID → VLAN (ou de VLAN par défaut / natif sur le trunk)."
+  },
+  {
+    "id": "q-vlan-06",
+    "type": "troubleshooting",
+    "concepts": ["vlan", "radius", "dhcp", "8021x"],
+    "domain": "fundamentals",
+    "difficulty": 3,
+    "prompt": "Association OK. RADIUS Access-Accept reçu avec VLAN 42. Le client n’obtient pas d’IP. Où regarder ?",
+    "choices": [
+      "Le VLAN 42 existe-t-il sur le switch et sur le trunk vers l’AP ? Y a-t-il un scope DHCP pour ce VLAN ?",
+      "Le certificat du serveur RADIUS",
+      "Le mot de passe de l’utilisateur",
+      "La puissance d’émission de l’AP"
+    ],
+    "answer": 0,
+    "explanation": "802.11 ✓ → authentification ✓ → pas d’IP → VLAN/DHCP → data plane. RADIUS a bien répondu ; c’est l’application du VLAN dynamique côté filaire qui est suspecte."
+  }
+]

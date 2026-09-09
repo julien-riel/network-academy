@@ -1,0 +1,264 @@
+[
+  {
+    "id": "q-sec-01",
+    "type": "multiple-choice",
+    "concepts": ["wpa", "psk", "radius"],
+    "domain": "security",
+    "difficulty": 1,
+    "prompt": "Quelle est la différence essentielle entre WPA2-Personal et WPA2-Enterprise ?",
+    "choices": [
+      "Personal : une clé partagée, l’AP décide seul. Enterprise : identité individuelle via 802.1X/EAP, la décision est déléguée à un serveur RADIUS",
+      "Enterprise utilise un chiffrement, Personal non",
+      "Personal fonctionne seulement en 2.4 GHz",
+      "Enterprise n’a pas besoin d’AP"
+    ],
+    "answer": 0,
+    "explanation": "La question clé : qui décide ? PSK → l’AP. Enterprise → RADIUS, qui peut en plus renvoyer VLAN et politique par utilisateur."
+  },
+  {
+    "id": "q-sec-02",
+    "type": "multiple-choice",
+    "concepts": ["psk", "vlan"],
+    "domain": "security",
+    "difficulty": 2,
+    "prompt": "Pourquoi utiliser mPSK / PPSK pour des équipements IoT ?",
+    "choices": [
+      "Ils ne savent pas faire 802.1X ; mPSK donne une clé par appareil ou groupe sur un seul SSID, avec un VLAN possible par clé",
+      "Parce que mPSK est plus rapide que WPA3",
+      "Parce que les IoT n’ont pas d’adresse MAC",
+      "Parce que RADIUS ne supporte pas les IoT"
+    ],
+    "answer": 0,
+    "explanation": "mPSK = identité par appareil sans certificat ni supplicant. Idéal pour IoT et chambres d’hôtel : une clé révocable par entité, un VLAN par clé."
+  },
+  {
+    "id": "q-sec-03",
+    "type": "matching",
+    "concepts": ["8021x", "access-point", "radius", "station"],
+    "domain": "security",
+    "difficulty": 1,
+    "prompt": "Les trois personnages de 802.1X en Wi-Fi : associe chaque rôle à l’équipement.",
+    "pairs": [
+      { "left": "Supplicant", "right": "Le client (laptop, téléphone)" },
+      { "left": "Authenticator", "right": "L’Access Point (ou le switch)" },
+      { "left": "Authentication Server", "right": "Le serveur RADIUS" }
+    ],
+    "explanation": "Supplicant → (EAPOL) → Authenticator → (RADIUS) → Authentication Server. L’AP relaie et applique la décision."
+  },
+  {
+    "id": "q-sec-04",
+    "type": "multiple-choice",
+    "concepts": ["8021x", "eap", "dhcp"],
+    "domain": "security",
+    "difficulty": 2,
+    "prompt": "DHCP arrive-t-il avant ou après 802.1X ? Pourquoi ?",
+    "choices": [
+      "Après : 802.1X/EAP fonctionne en couche 2 (EAPOL, sans IP) ; le port n’est ouvert au trafic IP qu’après l’Access-Accept",
+      "Avant : le client a besoin d’une IP pour parler à RADIUS",
+      "En même temps",
+      "DHCP n’est pas nécessaire avec 802.1X"
+    ],
+    "answer": 0,
+    "explanation": "EAP peut fonctionner directement au-dessus de la couche de liaison, sans IP entre le supplicant et l’AP. Le client n’a d’IP qu’une fois admis. C’est aussi pourquoi le client ne parle jamais à RADIUS lui-même."
+  },
+  {
+    "id": "q-sec-05",
+    "type": "multiple-choice",
+    "concepts": ["radius", "station", "8021x"],
+    "domain": "security",
+    "difficulty": 1,
+    "prompt": "RADIUS est-il appelé directement par le téléphone ?",
+    "choices": [
+      "Non : le téléphone parle EAP à l’AP (EAPOL) ; c’est l’AP, RADIUS client, qui interroge le serveur",
+      "Oui, via UDP 1812",
+      "Oui, mais seulement en WPA3",
+      "Oui, via le captive portal"
+    ],
+    "answer": 0,
+    "explanation": "Le supplicant ne connaît même pas l’adresse du serveur RADIUS. EAP est transporté de bout en bout, mais encapsulé par l’AP dans RADIUS côté filaire."
+  },
+  {
+    "id": "q-sec-06",
+    "type": "matching",
+    "concepts": ["aaa", "radius"],
+    "domain": "security",
+    "difficulty": 1,
+    "prompt": "AAA : associe chaque A à sa question.",
+    "pairs": [
+      { "left": "Authentication", "right": "Qui es-tu ?" },
+      { "left": "Authorization", "right": "Qu’as-tu le droit de faire ? (VLAN, politique)" },
+      { "left": "Accounting", "right": "Qu’as-tu fait / combien as-tu consommé ?" }
+    ],
+    "explanation": "RADIUS transporte les trois : Access-Accept/Reject, attributs, Accounting-Request."
+  },
+  {
+    "id": "q-sec-07",
+    "type": "matching",
+    "concepts": ["radius", "coa"],
+    "domain": "security",
+    "difficulty": 2,
+    "prompt": "Associe chaque message RADIUS à sa signification.",
+    "pairs": [
+      { "left": "Access-Request", "right": "L’AP demande une décision (UDP 1812)" },
+      { "left": "Access-Challenge", "right": "Continue l’échange EAP" },
+      { "left": "Access-Accept", "right": "Admis, avec attributs (VLAN, politique)" },
+      { "left": "Access-Reject", "right": "Refusé" },
+      { "left": "CoA", "right": "Modifier l’autorisation d’une session en cours" },
+      { "left": "Accounting-Request", "right": "Début / fin / mise à jour de session (UDP 1813)" }
+    ],
+    "explanation": "Le port historique d’authentification est UDP 1812 ; l’accounting utilise UDP 1813 ; CoA/Disconnect utilisent 3799."
+  },
+  {
+    "id": "q-sec-08",
+    "type": "troubleshooting",
+    "concepts": ["radius", "8021x", "udp"],
+    "domain": "security",
+    "difficulty": 2,
+    "prompt": "Que se passe-t-il si le serveur RADIUS est inaccessible ?",
+    "choices": [
+      "Tous les clients des SSID Enterprise échouent avant d’obtenir une IP (timeout) ; les SSID PSK continuent de fonctionner",
+      "Les clients se connectent mais sans DNS",
+      "Les clients obtiennent une IP 169.254.x.x",
+      "Seuls les nouveaux AP sont affectés"
+    ],
+    "answer": 0,
+    "explanation": "L’AP envoie l’Access-Request en UDP, réessaie, abandonne : le port reste fermé. Symptôme massif et simultané sur les SSID 802.1X uniquement. Causes : serveur down, pare-feu UDP 1812, secret partagé, mauvaise IP."
+  },
+  {
+    "id": "q-sec-09",
+    "type": "ordering",
+    "concepts": ["captive-portal", "dhcp", "association"],
+    "domain": "security",
+    "difficulty": 2,
+    "prompt": "Remets dans l’ordre le parcours d’un invité sur un Wi-Fi avec captive portal.",
+    "items": ["Association Wi-Fi (SSID ouvert)", "DHCP : IP obtenue", "Accès réseau limité (walled garden)", "L’OS détecte le captive portal", "Le portail HTTPS s’affiche : login / acceptation", "Autorisation appliquée à la MAC/IP du client", "Internet"],
+    "explanation": "Le captive portal intervient après DHCP : le client est déjà sur le réseau, il lui manque l’autorisation d’aller plus loin."
+  },
+  {
+    "id": "q-sec-10",
+    "type": "multiple-choice",
+    "concepts": ["captive-portal", "wpa"],
+    "domain": "security",
+    "difficulty": 1,
+    "prompt": "Quelle est la différence entre l’authentification Wi-Fi et un captive portal ?",
+    "choices": [
+      "L’authentification Wi-Fi permet d’entrer sur le WLAN ; le captive portal contrôle l’accès aux ressources après que le client soit déjà connecté (avec une IP)",
+      "Ce sont deux noms pour la même chose",
+      "Le captive portal remplace DHCP",
+      "Le captive portal chiffre la radio"
+    ],
+    "answer": 0,
+    "explanation": "Deux moments distincts : avant DHCP (WPA/802.1X : entrer) et après DHCP (portail : être autorisé à sortir vers Internet)."
+  },
+  {
+    "id": "q-sec-11",
+    "type": "multiple-choice",
+    "concepts": ["captive-portal", "dhcp"],
+    "domain": "security",
+    "difficulty": 3,
+    "prompt": "Que formalisent les RFC 8910 et 8908 (CAPPORT) ?",
+    "choices": [
+      "8910 : annoncer le portail via DHCP (option 114) ou RA ; 8908 : une API HTTPS pour connaître son état de captivité et l’URI du portail",
+      "Un nouveau protocole de chiffrement Wi-Fi",
+      "Le format des beacons",
+      "L’attribution des VLAN par RADIUS"
+    ],
+    "answer": 0,
+    "explanation": "CAPPORT remplace l’interception DNS/HTTP et les tests par URL des OS par une découverte explicite (DHCP/RA) et une API propre."
+  },
+  {
+    "id": "q-sec-12",
+    "type": "multiple-choice",
+    "concepts": ["passpoint", "openroaming"],
+    "domain": "security",
+    "difficulty": 2,
+    "prompt": "Passpoint et OpenRoaming : quelle description est correcte ?",
+    "choices": [
+      "Passpoint : découverte et connexion automatique en 802.1X/EAP avec un profil ; OpenRoaming : fédération d’identités qui route l’authentification vers le fournisseur d’identité du client",
+      "Passpoint est un captive portal amélioré ; OpenRoaming est un VPN",
+      "Les deux remplacent RADIUS",
+      "Passpoint fonctionne uniquement en WPA2-Personal"
+    ],
+    "answer": 0,
+    "explanation": "Passpoint est la brique technique (802.11u/ANQP + EAP). OpenRoaming ajoute la confiance fédérée entre réseaux d’accès et IdP, via RADIUS (RadSec)."
+  },
+  {
+    "id": "q-sec-13",
+    "type": "free-response",
+    "concepts": ["radius", "8021x", "access-point"],
+    "domain": "security",
+    "difficulty": 2,
+    "prompt": "Explique RADIUS en deux phrases.",
+    "expected": [
+      { "label": "Serveur AAA central qui décide de l’accès", "keywords": ["aaa", "central", "décid", "authentifi", "autoris", "serveur"] },
+      { "label": "L’AP (NAS) est le client qui envoie Access-Request", "keywords": ["ap ", "access point", "point d’accès", "point d'accès", "nas", "access-request", "client radius"] },
+      { "label": "La réponse peut contenir des attributs : VLAN, politique", "keywords": ["vlan", "attribut", "politique", "policy", "accept"] }
+    ],
+    "sampleAnswer": "RADIUS est un protocole client-serveur par lequel un équipement réseau (l’AP, appelé NAS) demande à un serveur AAA central s’il doit admettre un client. Le serveur répond Access-Accept ou Access-Reject, et peut renvoyer des attributs comme le VLAN ou une politique à appliquer.",
+    "explanation": "Les points à ne pas oublier : l’AP est le client RADIUS, et RADIUS fait plus qu’authentifier (autorisation, accounting)."
+  },
+  {
+    "id": "q-sec-14",
+    "type": "free-response",
+    "concepts": ["8021x", "eap", "radius"],
+    "domain": "security",
+    "difficulty": 2,
+    "prompt": "Décris le parcours 802.1X → EAP → RADIUS quand un laptop rejoint un SSID WPA2-Enterprise.",
+    "expected": [
+      { "label": "Le laptop (supplicant) parle EAP à l’AP via EAPOL, sans IP", "keywords": ["supplicant", "eapol", "sans ip", "couche 2", "avant dhcp", "pas d’ip", "pas d'ip"] },
+      { "label": "L’AP (authenticator) encapsule EAP dans RADIUS vers le serveur", "keywords": ["authenticator", "encapsul", "relai", "access-request", "transmet"] },
+      { "label": "Le serveur répond Access-Accept (avec VLAN) et l’AP ouvre le port", "keywords": ["accept", "vlan", "ouvre", "autorise", "admis"] },
+      { "label": "Ensuite seulement DHCP", "keywords": ["dhcp", "ensuite", "puis"] }
+    ],
+    "sampleAnswer": "Après l’association, le laptop (supplicant) envoie ses messages EAP à l’AP en EAPOL, en couche 2, sans adresse IP. L’AP (authenticator) les encapsule dans des Access-Request RADIUS vers le serveur d’authentification, qui mène l’échange EAP (par exemple EAP-TLS). À la fin, le serveur renvoie un Access-Accept avec éventuellement un VLAN ; l’AP ouvre le port, le handshake de clés a lieu, et le client peut enfin faire DHCP.",
+    "explanation": "Trois personnages, deux transports (EAPOL puis RADIUS), et DHCP seulement à la fin."
+  },
+  {
+    "id": "q-sec-15",
+    "type": "multiple-choice",
+    "concepts": ["eap", "certificates"],
+    "domain": "security",
+    "difficulty": 2,
+    "prompt": "Un seul utilisateur ne parvient pas à rejoindre le SSID Enterprise ; tous les autres y arrivent. Son téléphone affiche « certificat non approuvé ». Que se passe-t-il ?",
+    "choices": [
+      "Le client ne fait pas confiance au certificat présenté par le serveur RADIUS (CA absente sur l’appareil ou profil incorrect) et refuse l’échange EAP",
+      "Le serveur RADIUS est down",
+      "Le VLAN est incorrect",
+      "Le DHCP est saturé"
+    ],
+    "answer": 0,
+    "explanation": "En PEAP/EAP-TLS, le client valide le certificat du serveur. S’il ne reconnaît pas la CA, il abandonne — avant toute IP. Un problème global (RADIUS down) toucherait tout le monde."
+  },
+  {
+    "id": "q-sec-16",
+    "type": "multiple-choice",
+    "concepts": ["coa", "captive-portal", "radius"],
+    "domain": "security",
+    "difficulty": 3,
+    "prompt": "Sur un captive portal, l’invité clique « Accepter », la page dit « Connecté », mais Internet reste bloqué. Quel mécanisme suspecter ?",
+    "choices": [
+      "L’autorisation n’a pas été appliquée sur l’AP/gateway : le CoA RADIUS (ou l’appel API) vers l’équipement n’a pas abouti",
+      "Le canal radio",
+      "Le bail DHCP",
+      "Le SSID caché"
+    ],
+    "answer": 0,
+    "explanation": "Le portail a validé côté serveur, mais l’équipement qui bloque le trafic n’a pas reçu l’ordre de lever la restriction (CoA sur UDP 3799 filtré, mauvais NAS, MAC changée)."
+  },
+  {
+    "id": "q-sec-17",
+    "type": "multiple-choice",
+    "concepts": ["sae", "wpa", "band"],
+    "domain": "security",
+    "difficulty": 2,
+    "prompt": "Pourquoi un SSID WPA2-Personal ne peut-il pas être diffusé sur la bande 6 GHz ?",
+    "choices": [
+      "Le 6 GHz exige WPA3 (SAE ou Enterprise) ; WPA2 n’y est pas autorisé",
+      "La bande 6 GHz n’a pas de chiffrement",
+      "Le 6 GHz ne supporte que les captive portals",
+      "Il le peut, sans restriction"
+    ],
+    "answer": 0,
+    "explanation": "Le Wi-Fi 6E impose WPA3 : SAE pour le Personal, ou 802.1X pour l’Enterprise. Un SSID WPA2 restera sur 2.4/5 GHz."
+  }
+]

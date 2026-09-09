@@ -1,0 +1,88 @@
+{
+  "id": "ethernet",
+  "order": 2,
+  "title": "Ethernet et switching",
+  "subtitle": "Trames, MAC, switches, VLAN, trunk : le réseau local sur lequel tout le reste repose.",
+  "domain": "fundamentals",
+  "concepts": ["ethernet", "switch", "mac-address", "broadcast", "vlan", "trunk", "stp", "lldp", "poe", "lacp"],
+  "prerequisites": ["osi"],
+  "quiz": ["q-eth-01", "q-eth-02", "q-eth-03", "q-eth-04", "q-eth-05", "q-eth-06", "q-vlan-01", "q-vlan-03"],
+  "lessons": [
+    {
+      "id": "eth-1",
+      "title": "Le switch et sa table MAC",
+      "minutes": 6,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Ethernet transporte des **trames** adressées par MAC entre les équipements d’un réseau local. Un **switch** apprend, en observant les trames, quelle MAC se trouve derrière quel port, puis ne transmet chaque trame que là où il faut. Les broadcasts (destination FF:FF:FF:FF:FF:FF) sont envoyés à tous les ports du même VLAN."
+        },
+        {
+          "type": "diagram",
+          "title": "Apprentissage de la table MAC",
+          "text": "        ┌───────────── SWITCH ─────────────┐\n        │ Table MAC                         │\n        │  AA:AA…  port 1   VLAN 10         │\n        │  BB:BB…  port 2   VLAN 10         │\n        │  CC:CC…  port 7   VLAN 10 (AP)    │\n        └──┬─────────┬──────────────┬───────┘\n      port 1      port 2         port 7\n        │           │              │\n     PC (AA)     PC (BB)     AP (CC) ))))  Phone (DD)\n\nTrame DD → AA : l’AP la met sur le câble, le switch la sort port 1 uniquement.\nLe switch apprend au passage : DD:DD… est derrière le port 7."
+        },
+        { "type": "concepts", "ids": ["ethernet", "switch"] },
+        {
+          "type": "callout",
+          "kind": "remember",
+          "text": "Un switch prend principalement ses décisions à partir des adresses MAC, alors qu’un routeur prend ses décisions à partir des adresses IP."
+        },
+        {
+          "type": "paragraph",
+          "text": "Concepts secondaires à reconnaître sans les approfondir : **STP/RSTP** (évite les boucles, peut bloquer un port quelques secondes), **LLDP** (chaque équipement annonce qui il est à son voisin — c’est ainsi que le cloud sait sur quel port de quel switch est branché un AP), **PoE** (le switch alimente l’AP par le câble ; un budget insuffisant = AP dégradé), **LACP** (deux câbles agrégés en un lien)."
+        },
+        { "type": "concepts", "ids": ["poe", "lldp"] },
+        { "type": "exercise", "questionIds": ["q-eth-01", "q-eth-02"] }
+      ]
+    },
+    {
+      "id": "eth-2",
+      "title": "VLAN : trois réseaux sur un seul câble",
+      "minutes": 8,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Un **VLAN** est un réseau logique de couche 2. Sur la même infrastructure physique, on isole Corporate, Guest et IoT. Chaque VLAN a son propre domaine de broadcast, donc son propre subnet IP et son propre scope DHCP."
+        },
+        {
+          "type": "diagram",
+          "title": "Un AP, trois SSID, trois VLAN",
+          "text": "                 AP\n             /    |    \\\n   Corporate    Guest    IoT       (SSID)\n       ↓          ↓       ↓\n    VLAN 10    VLAN 20  VLAN 30\n        \\         |       /\n         ═════ trunk 802.1Q ═════   (un seul câble, trames taguées)\n                  │\n               SWITCH\n              /   |   \\\n      VLAN 10  VLAN 20  VLAN 30  →  Routeur (routage inter-VLAN, DHCP par VLAN)"
+        },
+        {
+          "type": "table",
+          "headers": ["Terme", "Signification", "Exemple"],
+          "rows": [
+            ["Access port / untagged", "Le port appartient à un seul VLAN ; pas de tag sur les trames", "Port vers un PC ou une imprimante"],
+            ["Trunk / tagged", "Le port transporte plusieurs VLAN ; chaque trame porte un tag 802.1Q", "Port vers un AP multi-SSID ou un autre switch"],
+            ["VLAN ID", "Numéro 1–4094 dans le tag", "10, 20, 30"],
+            ["Native VLAN", "Le VLAN dont les trames circulent sans tag sur un trunk", "Souvent le VLAN de management"],
+            ["Routage inter-VLAN", "Passage d’un VLAN à l’autre par un routeur", "Corporate → serveur d’impression"]
+          ]
+        },
+        { "type": "concepts", "ids": ["vlan", "trunk"] },
+        {
+          "type": "callout",
+          "kind": "analogy",
+          "text": "Un VLAN est un namespace Kubernetes ou un VPC : même cluster physique, isolation logique, et il faut une route explicite (un routeur) pour traverser."
+        },
+        {
+          "type": "callout",
+          "kind": "warning",
+          "title": "La panne VLAN classique",
+          "text": "Les invités reçoivent des adresses IP du réseau Corporate → le SSID Guest est mappé sur le mauvais VLAN. Pas d’IP du tout sur un SSID → le VLAN n’est pas autorisé sur le trunk vers l’AP. Dans les deux cas, l’association Wi-Fi et l’authentification étaient **parfaites** : le problème est en dessous de DHCP, dans la couche 2 filaire."
+        },
+        { "type": "exercise", "questionIds": ["q-vlan-01", "q-vlan-02"] },
+        {
+          "type": "takeaways",
+          "items": [
+            "VLAN = réseau logique isolé = domaine de broadcast = subnet = scope DHCP.",
+            "SSID → VLAN : chaque réseau Wi-Fi est mappé vers un VLAN (fixe, ou dynamique via RADIUS).",
+            "Trunk vers l’AP : tous les VLAN des SSID doivent y être autorisés."
+          ]
+        }
+      ]
+    }
+  ]
+}

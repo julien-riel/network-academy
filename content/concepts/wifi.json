@@ -1,0 +1,424 @@
+[
+  {
+    "id": "wifi",
+    "name": "Wi-Fi (802.11)",
+    "aliases": ["802.11", "WLAN", "sans-fil"],
+    "shortDefinition": "Famille de standards IEEE 802.11 qui remplace le câble Ethernet entre le client et le réseau par une liaison radio.",
+    "whyItExists": "Connecter des appareils mobiles sans câble.",
+    "whoTalksToWhom": "Station (client) ↔ Access Point, par radio, sur un canal donné.",
+    "when": "En dessous de tout : avant l’authentification, avant DHCP, avant Internet.",
+    "explanation": "**Wi-Fi n’est pas Internet.** Wi-Fi remplace essentiellement le lien Ethernet physique entre le client et le réseau.\n\n```\nEthernet : Laptop ─ câble ─ Switch\nWi-Fi    : Laptop )))) AP ─ Switch\n```\n\nLes deux vivent principalement aux couches 1 et 2. Un client peut avoir « du Wi-Fi » (associé à l’AP, bon signal) et « pas d’Internet » (DHCP, DNS, gateway, captive portal…). Séparer les deux est le premier réflexe de troubleshooting.",
+    "softwareAnalogy": "Le Wi-Fi est la couche transport physique, pas l’API. Avoir une socket ouverte ne dit rien sur la réponse HTTP.",
+    "category": "wifi",
+    "difficulty": 1,
+    "osiLayers": [1, 2],
+    "prerequisites": ["osi-model", "ethernet"],
+    "relatedConcepts": [
+      { "conceptId": "access-point", "type": "uses" },
+      { "conceptId": "ssid", "type": "uses" },
+      { "conceptId": "association", "type": "uses" },
+      { "conceptId": "ethernet", "type": "related", "label": "équivalent sans fil de" },
+      { "conceptId": "wifi-standards", "type": "related" },
+      { "conceptId": "channel", "type": "runs-over" }
+    ],
+    "failureSymptoms": ["« Le Wi-Fi ne marche pas » : phrase à décomposer. SSID visible ? Association ? Authentification ? IP ? DNS ?"],
+    "sources": [{ "title": "IEEE 802.11-2024", "url": "https://standards.ieee.org/ieee/802.11/11599/", "kind": "ieee" }]
+  },
+  {
+    "id": "wifi-standards",
+    "name": "Générations Wi-Fi",
+    "aliases": ["Wi-Fi 4", "Wi-Fi 5", "Wi-Fi 6", "Wi-Fi 6E", "Wi-Fi 7", "802.11n", "802.11ac", "802.11ax", "802.11be"],
+    "shortDefinition": "Nom commercial (Wi-Fi 6) vs standard IEEE (802.11ax) : chaque génération améliore débit, efficacité ou spectre.",
+    "whyItExists": "Le nom commercial simplifie ; le nom IEEE est ce que les fiches techniques et les logs utilisent.",
+    "explanation": "- Legacy : 802.11a/b/g — 2.4 / 5 GHz — historique.\n- Wi-Fi 4 : 802.11n — 2.4 / 5 — MIMO.\n- Wi-Fi 5 : 802.11ac — 5 GHz — débit accru.\n- Wi-Fi 6 : 802.11ax — 2.4 / 5 — efficacité, OFDMA.\n- Wi-Fi 6E : 802.11ax — + 6 GHz — accès au spectre 6 GHz.\n- Wi-Fi 7 : 802.11be — 2.4 / 5 / 6 — très haut débit, MLO, canaux plus larges.\n\nNe pas apprendre les débits théoriques par cœur. Retenir : 802.11ax vise l’**efficacité** dans les environnements denses ; 802.11be vise les **débits** et la **latence**.",
+    "category": "wifi",
+    "difficulty": 1,
+    "osiLayers": [1, 2],
+    "prerequisites": ["wifi"],
+    "relatedConcepts": [
+      { "conceptId": "wifi", "type": "related" },
+      { "conceptId": "band", "type": "uses" },
+      { "conceptId": "ofdma", "type": "uses", "label": "Wi-Fi 6 introduit" },
+      { "conceptId": "mimo", "type": "uses" }
+    ],
+    "sources": [
+      { "title": "IEEE 802.11ax-2021", "url": "https://standards.ieee.org/ieee/802.11ax/7180/", "kind": "ieee" },
+      { "title": "IEEE 802.11be-2024", "url": "https://standards.ieee.org/ieee/802.11be/7516/", "kind": "ieee" }
+    ]
+  },
+  {
+    "id": "access-point",
+    "name": "Access Point (AP)",
+    "aliases": ["AP", "point d’accès", "borne"],
+    "shortDefinition": "Équipement qui fait le pont entre les clients Wi-Fi (radio) et le réseau filaire (Ethernet), et qui joue le rôle d’Authenticator en 802.1X.",
+    "whyItExists": "Il faut un point fixe, câblé et alimenté, qui expose des SSID et relaie les trames vers le switch.",
+    "whoTalksToWhom": "Clients ↔ AP (802.11) ; AP ↔ switch (Ethernet, trunk) ; AP ↔ serveur RADIUS ; AP ↔ contrôleur cloud (uCentral).",
+    "when": "Toujours en fonction ; une ou plusieurs radios, chacune diffusant un ou plusieurs SSID.",
+    "explanation": "Un AP contient typiquement Linux/OpenWrt, des drivers Wi-Fi, hostapd (qui gère SSID, association, authentification), et — en OpenWiFi — un client uCentral qui reçoit sa configuration du cloud. L’AP n’est **ni** un switch (il n’a qu’un port) **ni** un routeur (il ne route pas, il « bridge » en couche 2), même si certains modes le permettent.\n\nL’AP est le **RADIUS client** : c’est lui, pas le téléphone, qui envoie l’Access-Request.",
+    "softwareAnalogy": "Un edge node avec un agent : il exécute localement le data plane et reçoit sa configuration désirée du control plane.",
+    "category": "wifi",
+    "difficulty": 1,
+    "osiLayers": [1, 2],
+    "prerequisites": ["wifi", "ethernet"],
+    "relatedConcepts": [
+      { "conceptId": "ssid", "type": "controls", "label": "diffuse" },
+      { "conceptId": "radio", "type": "uses" },
+      { "conceptId": "switch", "type": "runs-over", "label": "raccordé au" },
+      { "conceptId": "radius", "type": "authenticates-with", "label": "est le client de" },
+      { "conceptId": "ucentral", "type": "uses", "label": "piloté via" },
+      { "conceptId": "ap-nos", "type": "uses", "label": "exécute" },
+      { "conceptId": "poe", "type": "depends-on" }
+    ],
+    "failureSymptoms": ["AP hors ligne dans le cloud mais clients fonctionnels : control plane brisé, data plane OK.", "AP sans PoE suffisant : radio désactivée."],
+    "sources": []
+  },
+  {
+    "id": "radio",
+    "name": "Radio",
+    "aliases": ["interface radio", "2.4G radio", "5G radio"],
+    "shortDefinition": "Chaque AP possède une ou plusieurs radios (2.4 GHz, 5 GHz, 6 GHz), chacune sur un canal, chacune diffusant un ou plusieurs BSS.",
+    "whyItExists": "Plusieurs bandes = plus de capacité et compatibilité avec plus de clients.",
+    "explanation": "La radio a un canal, une largeur de canal et une puissance d’émission — ce que RRM ajuste. Un même SSID diffusé sur deux radios donne deux BSSID différents.",
+    "category": "wifi",
+    "difficulty": 1,
+    "osiLayers": [1],
+    "prerequisites": ["access-point"],
+    "relatedConcepts": [
+      { "conceptId": "band", "type": "uses" },
+      { "conceptId": "channel", "type": "uses" },
+      { "conceptId": "bssid", "type": "assigns", "label": "identifie chaque BSS" },
+      { "conceptId": "rrm", "type": "related", "label": "réglée par" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "station",
+    "name": "Station / Client",
+    "aliases": ["STA", "client Wi-Fi", "supplicant"],
+    "shortDefinition": "Tout appareil qui se connecte à un AP : téléphone, laptop, capteur IoT.",
+    "whyItExists": "Vocabulaire 802.11 : le client s’appelle une station (STA).",
+    "explanation": "La station choisit le SSID, l’AP (BSSID) et décide en grande partie du roaming. En 802.1X, elle est le **supplicant**. Elle est identifiée par sa MAC (souvent aléatoire par SSID sur les téléphones récents).",
+    "category": "wifi",
+    "difficulty": 1,
+    "osiLayers": [1, 2],
+    "prerequisites": ["wifi"],
+    "relatedConcepts": [
+      { "conceptId": "association", "type": "uses" },
+      { "conceptId": "roaming", "type": "controls", "label": "décide du" },
+      { "conceptId": "8021x", "type": "related", "label": "est le supplicant" },
+      { "conceptId": "mac-address", "type": "uses" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "ssid",
+    "name": "SSID",
+    "aliases": ["Service Set Identifier", "nom du réseau Wi-Fi", "WLAN"],
+    "shortDefinition": "Nom logique d’un réseau Wi-Fi, commun à tous les AP qui le diffusent.",
+    "whyItExists": "Le client doit pouvoir reconnaître « son » réseau parmi tous les AP visibles, et retrouver le même réseau d’un AP à l’autre.",
+    "whoTalksToWhom": "AP → tout le monde (beacons) ; client → AP (probe request).",
+    "when": "Première étape : le client scanne, voit les SSID, en choisit un.",
+    "explanation": "```\n             SSID: Corporate\n        ┌──── AP1 / BSSID A\nPhone ──┤\n        ├──── AP2 / BSSID B\n        └──── AP3 / BSSID C\n```\n\nLe SSID peut être commun à plusieurs AP ; chaque radio/BSS possède néanmoins son identité (BSSID). Un SSID porte une politique : sécurité (open, PSK, 802.1X), VLAN, captive portal, QoS. Trois SSID = trois politiques sur le même matériel.",
+    "softwareAnalogy": "Le SSID est le nom de service (DNS logique) ; le BSSID est l’adresse d’une instance précise derrière le load balancer.",
+    "category": "wifi",
+    "difficulty": 1,
+    "osiLayers": [2],
+    "prerequisites": ["wifi"],
+    "relatedConcepts": [
+      { "conceptId": "bssid", "type": "related", "label": "≠ identité par radio" },
+      { "conceptId": "access-point", "type": "related", "label": "diffusé par" },
+      { "conceptId": "vlan", "type": "assigns", "label": "mappé vers un" },
+      { "conceptId": "wpa", "type": "uses", "label": "politique de sécurité" },
+      { "conceptId": "beacon", "type": "uses", "label": "annoncé par" }
+    ],
+    "failureSymptoms": ["SSID invisible : radio éteinte, SSID caché, bande non supportée par le client, AP sans config."],
+    "sources": []
+  },
+  {
+    "id": "bssid",
+    "name": "BSSID",
+    "aliases": ["Basic Service Set Identifier"],
+    "shortDefinition": "Adresse MAC d’une radio/BSS spécifique : l’identité précise de l’AP auquel un client est associé.",
+    "whyItExists": "Plusieurs AP diffusent le même SSID ; il faut distinguer à quel AP exactement on parle (pour le roaming, le troubleshooting).",
+    "explanation": "Quand un utilisateur dit « je suis sur Corporate », le BSSID dit **sur quel AP et quelle radio**. Un même AP a un BSSID différent par radio et par SSID.",
+    "category": "wifi",
+    "difficulty": 1,
+    "osiLayers": [2],
+    "prerequisites": ["ssid", "mac-address"],
+    "relatedConcepts": [
+      { "conceptId": "ssid", "type": "related" },
+      { "conceptId": "radio", "type": "related" },
+      { "conceptId": "roaming", "type": "related", "label": "changer de" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "beacon",
+    "name": "Beacon / Probe",
+    "aliases": ["beacon frame", "probe request", "probe response", "scan"],
+    "shortDefinition": "Le beacon est la trame périodique par laquelle un AP annonce un SSID ; le probe est la question qu’un client envoie pour découvrir les réseaux.",
+    "whyItExists": "Découverte : le client doit savoir quels réseaux existent, sur quel canal, avec quelle sécurité.",
+    "whoTalksToWhom": "AP → broadcast (beacon, ~10×/s) ; client → AP (probe request) ; AP → client (probe response).",
+    "when": "Avant l’association.",
+    "explanation": "Le beacon contient le SSID, les débits supportés, la sécurité (WPA2/WPA3), les capacités 802.11k/v/r. Le client construit sa liste de réseaux à partir des beacons et des probe responses.",
+    "category": "wifi",
+    "difficulty": 2,
+    "osiLayers": [2],
+    "prerequisites": ["ssid"],
+    "relatedConcepts": [
+      { "conceptId": "ssid", "type": "related" },
+      { "conceptId": "association", "type": "related", "label": "précède" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "association",
+    "name": "Association 802.11",
+    "aliases": ["authentication 802.11", "association request", "open system authentication"],
+    "shortDefinition": "Échange par lequel une station rejoint un BSS : authentication (802.11, souvent « open »), puis association request/response.",
+    "whyItExists": "L’AP doit allouer des ressources au client et le client doit connaître les paramètres du BSS avant de transmettre des données.",
+    "whoTalksToWhom": "Station ↔ AP.",
+    "when": "Après le scan, avant l’authentification de sécurité (4-way handshake WPA ou 802.1X) et avant DHCP.",
+    "explanation": "Ne pas confondre l’« authentication » 802.11 (quasi formalité, open system) avec l’authentification de sécurité (PSK, SAE, 802.1X) qui vient juste après. Si l’association échoue, on n’a même pas de couche 2 : inutile de regarder DHCP ou DNS.",
+    "category": "wifi",
+    "difficulty": 2,
+    "osiLayers": [2],
+    "prerequisites": ["ssid", "station"],
+    "actors": ["Station", "AP"],
+    "packetFlow": [
+      { "from": "Station", "to": "AP", "label": "Probe Request", "note": "« Qui diffuse Corporate ? »" },
+      { "from": "AP", "to": "Station", "label": "Probe Response", "note": "« Moi, sur le canal 36, WPA2-Enterprise. »" },
+      { "from": "Station", "to": "AP", "label": "Authentication (open)", "note": "Formalité 802.11, pas encore de sécurité." },
+      { "from": "AP", "to": "Station", "label": "Authentication OK" },
+      { "from": "Station", "to": "AP", "label": "Association Request", "note": "Le client demande à rejoindre le BSS." },
+      { "from": "AP", "to": "Station", "label": "Association Response", "note": "L’AP accepte : le client a une liaison couche 2… mais pas encore le droit d’envoyer des données (si WPA/802.1X)." }
+    ],
+    "relatedConcepts": [
+      { "conceptId": "wpa", "type": "related", "label": "suivie du handshake" },
+      { "conceptId": "8021x", "type": "related", "label": "suivie de" },
+      { "conceptId": "dhcp", "type": "related", "label": "précède" },
+      { "conceptId": "beacon", "type": "depends-on" }
+    ],
+    "failureSymptoms": ["Le client voit le SSID mais « ne peut pas s’y connecter » : rejet d’association (AP saturé, bande incompatible, MAC filtrée) ou échec du handshake juste après."],
+    "sources": [{ "title": "IEEE 802.11-2024", "url": "https://standards.ieee.org/ieee/802.11/11599/", "kind": "ieee" }]
+  },
+  {
+    "id": "band",
+    "name": "Bandes 2.4 / 5 / 6 GHz",
+    "aliases": ["2.4 GHz", "5 GHz", "6 GHz", "bande de fréquence"],
+    "shortDefinition": "Les trois bandes de fréquences Wi-Fi, avec des compromis portée / capacité / compatibilité différents.",
+    "whyItExists": "Le spectre est limité et réglementé ; chaque bande a ses propriétés physiques.",
+    "explanation": "- **2.4 GHz** : meilleure portée, moins de spectre (3 canaux non chevauchants), davantage congestionné (micro-ondes, Bluetooth, voisins).\n- **5 GHz** : davantage de canaux, bonnes performances, portée généralement moindre ; certains canaux DFS partagés avec les radars.\n- **6 GHz** (Wi-Fi 6E/7) : beaucoup de nouveau spectre, WPA3 obligatoire, équipements compatibles requis.",
+    "category": "wifi",
+    "difficulty": 1,
+    "osiLayers": [1],
+    "prerequisites": ["wifi"],
+    "relatedConcepts": [
+      { "conceptId": "channel", "type": "related" },
+      { "conceptId": "band-steering", "type": "related", "label": "choix influencé par" },
+      { "conceptId": "dfs", "type": "related", "label": "5 GHz soumis à" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "channel",
+    "name": "Canal et largeur de canal",
+    "aliases": ["channel", "channel width", "20/40/80/160 MHz", "co-channel interference"],
+    "shortDefinition": "Sous-division d’une bande sur laquelle une radio émet ; la largeur (20–160 MHz) échange débit contre nombre de canaux disponibles.",
+    "whyItExists": "Deux radios sur le même canal à portée l’une de l’autre se partagent le temps d’antenne (co-channel interference).",
+    "explanation": "Le Wi-Fi est un médium partagé : sur un canal donné, un seul émetteur parle à la fois. Trop d’AP sur le même canal = contention ; canaux trop larges = moins de canaux distincts = plus de chevauchement. C’est le problème que résout l’auto-channel du RRM.",
+    "category": "wifi",
+    "difficulty": 2,
+    "osiLayers": [1],
+    "prerequisites": ["band"],
+    "relatedConcepts": [
+      { "conceptId": "rrm", "type": "related", "label": "choisi par" },
+      { "conceptId": "interference", "type": "related" },
+      { "conceptId": "channel-utilization", "type": "related" }
+    ],
+    "failureSymptoms": ["Bon RSSI mais débit faible et latence variable : canal saturé."],
+    "sources": []
+  },
+  {
+    "id": "rssi",
+    "name": "RSSI / SNR / noise floor",
+    "aliases": ["RSSI", "SNR", "signal", "bruit", "dBm"],
+    "shortDefinition": "RSSI : puissance du signal reçu (dBm, ex. −65). Noise floor : niveau de bruit (ex. −95). SNR : la différence (ex. 30 dB), ce qui compte vraiment.",
+    "whyItExists": "Pour quantifier la qualité d’un lien radio et décider d’un roaming ou d’un débit.",
+    "explanation": "Repères grossiers : RSSI −55 excellent, −65 bon, −75 limite, −85 mauvais. Un SNR ≥ 25 dB permet les débits élevés. Un bon RSSI avec un mauvais SNR = environnement bruyant. Ce sont les métriques de base exposées par la télémétrie d’un AP.",
+    "softwareAnalogy": "RSSI/SNR sont aux liens radio ce que la latence p99 et le taux d’erreur sont à un service : les premiers indicateurs à regarder.",
+    "category": "wifi",
+    "difficulty": 2,
+    "osiLayers": [1],
+    "prerequisites": ["radio"],
+    "relatedConcepts": [
+      { "conceptId": "roaming", "type": "related", "label": "déclenche le" },
+      { "conceptId": "telemetry", "type": "related", "label": "remonté par" },
+      { "conceptId": "interference", "type": "related" }
+    ],
+    "failureSymptoms": ["RSSI −80 : le client est trop loin ou l’AP émet trop faible ; RSSI bon mais SNR faible : interférence."],
+    "sources": []
+  },
+  {
+    "id": "interference",
+    "name": "Interférence",
+    "aliases": ["co-channel interference", "adjacent channel", "bruit"],
+    "shortDefinition": "Tout signal qui occupe le canal (autres AP, voisins, micro-ondes) et réduit le temps d’antenne disponible ou le SNR.",
+    "whyItExists": "Le spectre est partagé et non exclusif.",
+    "explanation": "Co-channel : d’autres Wi-Fi sur le même canal, qui attendent poliment leur tour (contention). Non-Wi-Fi : sources qui ne respectent pas le protocole (bruit). RRM réduit l’interférence entre ses propres AP en répartissant canaux et puissance.",
+    "category": "wifi",
+    "difficulty": 2,
+    "osiLayers": [1],
+    "prerequisites": ["channel"],
+    "relatedConcepts": [
+      { "conceptId": "rrm", "type": "related", "label": "réduite par" },
+      { "conceptId": "rssi", "type": "related" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "dfs",
+    "name": "DFS",
+    "aliases": ["Dynamic Frequency Selection", "canaux radar"],
+    "shortDefinition": "Mécanisme obligatoire sur certains canaux 5 GHz : si un radar est détecté, l’AP doit quitter le canal.",
+    "whyItExists": "Réglementation : ces fréquences sont partagées avec les radars météo et aéronautiques.",
+    "explanation": "Un AP sur canal DFS peut changer de canal soudainement (et couper les clients quelques secondes), ou attendre 60 s avant d’émettre au démarrage. Explique certains « décrochages » inexpliqués.",
+    "category": "wifi",
+    "difficulty": 2,
+    "osiLayers": [1],
+    "prerequisites": ["channel"],
+    "relatedConcepts": [
+      { "conceptId": "channel", "type": "related" },
+      { "conceptId": "rrm", "type": "related" }
+    ],
+    "failureSymptoms": ["Tous les clients d’un AP décrochent en même temps puis reviennent : événement DFS."],
+    "sources": []
+  },
+  {
+    "id": "mimo",
+    "name": "MIMO / MU-MIMO",
+    "aliases": ["spatial streams", "flux spatiaux", "antennes"],
+    "shortDefinition": "Utilisation de plusieurs antennes pour envoyer plusieurs flux en parallèle (MIMO) ; MU-MIMO le fait vers plusieurs clients à la fois.",
+    "whyItExists": "Augmenter le débit sans plus de spectre.",
+    "explanation": "Compréhension à haut niveau : « 4x4 » = 4 antennes / 4 flux. Un téléphone est souvent 2x2. Pas besoin d’aller plus loin pour ce cours.",
+    "category": "wifi",
+    "difficulty": 2,
+    "osiLayers": [1],
+    "prerequisites": ["radio"],
+    "relatedConcepts": [{ "conceptId": "wifi-standards", "type": "related" }],
+    "sources": []
+  },
+  {
+    "id": "ofdma",
+    "name": "OFDMA",
+    "aliases": ["resource units", "Wi-Fi 6 efficiency"],
+    "shortDefinition": "Technique de Wi-Fi 6 qui découpe un canal en sous-porteuses (resource units) pour servir plusieurs clients dans une même transmission.",
+    "whyItExists": "Améliorer l’efficacité avec beaucoup de petits clients (IoT, téléphones) plutôt que le débit brut d’un seul.",
+    "explanation": "Analogie : au lieu d’envoyer un camion entier à chaque client, on remplit un camion avec des colis pour plusieurs destinataires. Le gain est surtout visible en environnement dense.",
+    "category": "wifi",
+    "difficulty": 2,
+    "osiLayers": [1],
+    "prerequisites": ["wifi-standards"],
+    "relatedConcepts": [{ "conceptId": "wifi-standards", "type": "related", "label": "introduit par Wi-Fi 6" }],
+    "sources": [{ "title": "IEEE 802.11ax-2021", "url": "https://standards.ieee.org/ieee/802.11ax/7180/", "kind": "ieee" }]
+  },
+  {
+    "id": "roaming",
+    "name": "Roaming",
+    "aliases": ["itinérance", "handoff", "sticky client"],
+    "shortDefinition": "Passage d’un client d’un AP à un autre (même SSID) quand il se déplace.",
+    "whyItExists": "Un utilisateur qui marche dans un hôtel doit rester connecté sans intervention.",
+    "whoTalksToWhom": "Le client décide ; le réseau peut l’aider (802.11k/v) ou accélérer la ré-authentification (802.11r).",
+    "when": "Quand le RSSI de l’AP courant baisse sous un seuil décidé par le client.",
+    "explanation": "**Le client conserve une grande partie du contrôle de la décision de roaming.** Le réseau peut l’aider ou l’influencer : 802.11k (liste des voisins), 802.11v (suggestion de transition), 802.11r (fast transition : réutiliser les clés pour éviter de refaire tout le 802.1X). Un « sticky client » reste accroché à un AP lointain : classique.",
+    "category": "wifi",
+    "difficulty": 2,
+    "osiLayers": [2],
+    "prerequisites": ["association", "bssid"],
+    "relatedConcepts": [
+      { "conceptId": "80211kvr", "type": "uses", "label": "assisté par" },
+      { "conceptId": "client-steering", "type": "related" },
+      { "conceptId": "bssid", "type": "related", "label": "change de" },
+      { "conceptId": "8021x", "type": "related", "label": "peut nécessiter une ré-auth" }
+    ],
+    "failureSymptoms": ["Appels VoIP coupés en marchant : roaming lent (pas de 802.11r) ou sticky client."],
+    "sources": []
+  },
+  {
+    "id": "80211kvr",
+    "name": "802.11k / v / r",
+    "aliases": ["802.11k", "802.11v", "802.11r", "fast transition", "neighbor report", "BSS transition"],
+    "shortDefinition": "Trois amendements qui aident le roaming : k = rapport des voisins, v = suggestion de transition par le réseau, r = ré-authentification rapide.",
+    "whyItExists": "Rendre le roaming plus rapide et mieux informé, surtout avec 802.1X où une ré-auth complète prend trop de temps pour la voix.",
+    "explanation": "- **k** : l’AP fournit au client la liste des AP voisins et leurs canaux (moins de scan).\n- **v** : l’AP peut suggérer (pas imposer) un meilleur AP (BSS Transition Management).\n- **r** : Fast BSS Transition, les clés dérivées sont réutilisées entre AP → pas de nouvel échange RADIUS complet.",
+    "category": "wifi",
+    "difficulty": 2,
+    "osiLayers": [2],
+    "prerequisites": ["roaming"],
+    "relatedConcepts": [
+      { "conceptId": "roaming", "type": "controls", "label": "améliore" },
+      { "conceptId": "client-steering", "type": "uses", "label": "levier du" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "band-steering",
+    "name": "Band steering",
+    "aliases": ["steering de bande"],
+    "shortDefinition": "Technique par laquelle l’AP pousse un client capable de 5/6 GHz à utiliser ces bandes plutôt que le 2.4 GHz encombré.",
+    "whyItExists": "Beaucoup de clients préfèrent par défaut le 2.4 GHz (signal plus fort) alors que le 5 GHz offrirait plus de capacité.",
+    "explanation": "L’AP peut ignorer les premiers probes en 2.4 GHz, ou utiliser 802.11v pour suggérer une autre bande. Comme pour le roaming, le client garde le dernier mot.",
+    "category": "wifi",
+    "difficulty": 2,
+    "osiLayers": [2],
+    "prerequisites": ["band"],
+    "relatedConcepts": [
+      { "conceptId": "client-steering", "type": "related" },
+      { "conceptId": "band", "type": "controls" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "client-steering",
+    "name": "Client steering",
+    "aliases": ["steering", "load balancing Wi-Fi"],
+    "shortDefinition": "Ensemble de techniques (802.11k/v, refus d’association, déconnexion) par lesquelles le réseau influence l’AP et la bande qu’un client utilise.",
+    "whyItExists": "Équilibrer la charge entre AP et éviter les sticky clients, alors que le client décide seul.",
+    "explanation": "Le réseau **influence**, il n’impose pas. Un steering trop agressif provoque des déconnexions perçues comme des pannes. NetExperience mentionne client steering parmi ses fonctions RRM.",
+    "category": "wifi",
+    "difficulty": 2,
+    "osiLayers": [2],
+    "prerequisites": ["roaming"],
+    "relatedConcepts": [
+      { "conceptId": "rrm", "type": "related", "label": "fonction du" },
+      { "conceptId": "roaming", "type": "controls", "label": "influence" },
+      { "conceptId": "80211kvr", "type": "uses" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "rrm",
+    "name": "RRM",
+    "aliases": ["Radio Resource Management", "auto-channel", "auto-cell-size", "transmit power"],
+    "shortDefinition": "Automatisation des décisions radio d’un parc d’AP : quel canal, quelle puissance, quelle taille de cellule, quel client où.",
+    "whyItExists": "Avec 100 AP, personne ne peut choisir manuellement les canaux et puissances, ni les réajuster quand l’environnement change.",
+    "whoTalksToWhom": "AP → contrôleur (mesures : voisins, utilisation, bruit) ; contrôleur → AP (nouveaux canal/puissance) — ou algorithme local sur l’AP.",
+    "when": "Périodiquement ou sur événement (nouvel AP, interférence, DFS).",
+    "explanation": "Le problème avant l’algorithme : avec 100 AP, quel canal ? quelle puissance ? quels voisins ? quel client devrait être associé où ?\n\nRRM regroupe **auto-channel** (répartir les canaux pour minimiser la co-channel interference), **auto-cell-size / transmit power** (réduire la puissance des AP trop proches pour que les clients roament au bon moment) et **client steering**. OpenWiFi inclut des mécanismes de contrôle RRM ; NetExperience mentionne auto-channel, auto-cell-size et client steering.",
+    "softwareAnalogy": "Un autoscaler / scheduler : il observe des métriques et réécrit la configuration désirée des nœuds.",
+    "category": "wifi",
+    "difficulty": 2,
+    "osiLayers": [1, 2],
+    "prerequisites": ["channel", "rssi"],
+    "relatedConcepts": [
+      { "conceptId": "channel", "type": "controls", "label": "auto-channel" },
+      { "conceptId": "radio", "type": "controls", "label": "puissance / cell size" },
+      { "conceptId": "client-steering", "type": "uses" },
+      { "conceptId": "interference", "type": "controls", "label": "réduit" },
+      { "conceptId": "cloud-controller", "type": "related", "label": "fonction du" },
+      { "conceptId": "telemetry", "type": "depends-on", "label": "se nourrit de" }
+    ],
+    "failureSymptoms": ["Changements de canal trop fréquents : clients qui décrochent ; puissance trop élevée : sticky clients."],
+    "sources": [{ "title": "TIP OpenWiFi — RRM", "url": "https://openwifi.tip.build/", "kind": "project" }]
+  }
+]

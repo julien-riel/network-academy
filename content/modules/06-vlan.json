@@ -1,0 +1,76 @@
+{
+  "id": "vlan",
+  "order": 6,
+  "title": "VLAN et segmentation par SSID",
+  "subtitle": "Corporate, Guest, IoT : même matériel, trois réseaux. Où ça casse quand c’est mal mappé.",
+  "domain": "fundamentals",
+  "concepts": ["vlan", "trunk", "subnet", "dhcp", "router", "ssid", "broadcast"],
+  "prerequisites": ["ethernet", "protocols"],
+  "quiz": ["q-vlan-01", "q-vlan-02", "q-vlan-03", "q-vlan-04", "q-vlan-05", "q-vlan-06", "q-dhcp-03", "q-ts-05"],
+  "lessons": [
+    {
+      "id": "vlan-1",
+      "title": "SSID → VLAN → subnet → DHCP",
+      "minutes": 8,
+      "blocks": [
+        {
+          "type": "diagram",
+          "title": "La chaîne complète",
+          "text": "SSID Corporate  →  VLAN 10  →  10.10.0.0/24  →  scope DHCP 10.10.0.100–200  →  gateway 10.10.0.1\nSSID Guest      →  VLAN 20  →  10.20.0.0/24  →  scope DHCP 10.20.0.100–200  →  gateway 10.20.0.1 (+ captive portal)\nSSID IoT        →  VLAN 30  →  10.30.0.0/24  →  scope DHCP 10.30.0.100–200  →  gateway 10.30.0.1 (isolé)\n\nMême AP. Même switch. Même routeur. Trois réseaux logiques."
+        },
+        {
+          "type": "paragraph",
+          "text": "Chaque maillon dépend du précédent. L’AP tague les trames du client avec le VLAN du SSID (ou celui renvoyé par RADIUS). Le trunk vers le switch doit autoriser ce VLAN. Le routeur (ou un serveur via relais) sert le DHCP de ce VLAN. Le subnet et la gateway découlent du VLAN."
+        },
+        {
+          "type": "sequence",
+          "title": "Client Guest : de l’association à l’IP",
+          "actors": ["Phone", "AP", "Switch", "Routeur / DHCP"],
+          "steps": [
+            { "from": "Phone", "to": "AP", "label": "Association SSID Guest", "note": "L’AP sait : Guest → VLAN 20." },
+            { "from": "Phone", "to": "AP", "label": "DHCP Discover (broadcast)", "note": "Trame 802.11 sans tag." },
+            { "from": "AP", "to": "Switch", "label": "DHCP Discover [tag VLAN 20]", "note": "L’AP ajoute le tag 802.1Q sur le trunk." },
+            { "from": "Switch", "to": "Routeur / DHCP", "label": "DHCP Discover [VLAN 20]", "note": "Le switch le diffuse dans le VLAN 20 uniquement." },
+            { "from": "Routeur / DHCP", "to": "Phone", "label": "Offer 10.20.0.117", "note": "Scope du VLAN 20 : le client est bien dans le réseau Guest." }
+          ]
+        },
+        { "type": "concepts", "ids": ["vlan", "trunk", "subnet"] },
+        { "type": "exercise", "questionIds": ["q-vlan-03", "q-vlan-04"] }
+      ]
+    },
+    {
+      "id": "vlan-2",
+      "title": "Où ça casse",
+      "minutes": 7,
+      "blocks": [
+        {
+          "type": "table",
+          "headers": ["Symptôme", "Cause probable", "Où regarder"],
+          "rows": [
+            ["Les invités reçoivent des IP Corporate", "SSID Guest mappé sur VLAN 10 au lieu de 20", "Config SSID → VLAN sur l’AP (profil cloud)"],
+            ["SSID Guest : aucune IP (169.254.x.x), Corporate OK", "VLAN 20 absent du trunk vers l’AP, ou pas de scope DHCP pour le VLAN 20", "Port du switch (OpenLAN), serveur DHCP"],
+            ["Association OK, RADIUS Accept OK, pas d’IP", "RADIUS a renvoyé VLAN 42, inexistant sur le switch", "Attributs RADIUS vs VLAN du switch"],
+            ["Clients Guest voient les serveurs Corporate", "Pas d’isolation au routeur entre VLAN", "ACL / pare-feu inter-VLAN"],
+            ["Un seul AP a le problème, les autres non", "Port de cet AP mal configuré (access au lieu de trunk)", "Port du switch de cet AP"]
+          ]
+        },
+        {
+          "type": "callout",
+          "kind": "remember",
+          "title": "Le réflexe",
+          "text": "Association ✓ → authentification ✓ → **pas d’IP** → c’est VLAN / DHCP → regarder le data plane (AP → trunk → switch → DHCP), pas le cloud."
+        },
+        { "type": "concepts", "ids": ["dhcp", "router"] },
+        { "type": "exercise", "questionIds": ["q-vlan-05", "q-vlan-06"] },
+        {
+          "type": "takeaways",
+          "items": [
+            "Pourquoi des VLAN : isolation (Guest ≠ Corporate), politiques différentes, limitation des broadcasts.",
+            "La chaîne SSID → VLAN → trunk → subnet → DHCP doit être cohérente de bout en bout.",
+            "Une IP du mauvais réseau = un problème de mapping, jamais un problème radio."
+          ]
+        }
+      ]
+    }
+  ]
+}

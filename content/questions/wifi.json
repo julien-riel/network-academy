@@ -1,0 +1,240 @@
+[
+  {
+    "id": "q-wifi-01",
+    "type": "multiple-choice",
+    "concepts": ["wifi", "ethernet"],
+    "domain": "wifi",
+    "difficulty": 1,
+    "prompt": "Quelle affirmation est correcte ?",
+    "choices": [
+      "Le Wi-Fi remplace le lien Ethernet entre le client et le réseau ; il vit aux couches 1–2 et ne garantit pas l’accès Internet",
+      "Le Wi-Fi est un protocole de couche 3 qui fournit Internet",
+      "Un client associé au Wi-Fi a forcément une adresse IP",
+      "Le Wi-Fi remplace DHCP et DNS"
+    ],
+    "answer": 0,
+    "explanation": "Wi-Fi n’est pas Internet. Un client peut être parfaitement associé (couche 2) et n’avoir ni IP (DHCP), ni DNS, ni autorisation (captive portal)."
+  },
+  {
+    "id": "q-wifi-02",
+    "type": "matching",
+    "concepts": ["wifi-standards"],
+    "domain": "wifi",
+    "difficulty": 1,
+    "prompt": "Associe le nom commercial au standard IEEE.",
+    "pairs": [
+      { "left": "Wi-Fi 4", "right": "802.11n" },
+      { "left": "Wi-Fi 5", "right": "802.11ac" },
+      { "left": "Wi-Fi 6 / 6E", "right": "802.11ax" },
+      { "left": "Wi-Fi 7", "right": "802.11be" }
+    ],
+    "explanation": "Wi-Fi 6E est le même standard que Wi-Fi 6 (802.11ax) avec l’accès à la bande 6 GHz. 802.11be (Wi-Fi 7) vise débit, latence et MLO."
+  },
+  {
+    "id": "q-wifi-03",
+    "type": "multiple-choice",
+    "concepts": ["band"],
+    "domain": "wifi",
+    "difficulty": 1,
+    "prompt": "Quelle bande offre la meilleure portée mais le moins de spectre et le plus de congestion ?",
+    "choices": ["2.4 GHz", "5 GHz", "6 GHz", "Les trois sont équivalentes"],
+    "answer": 0,
+    "explanation": "2.4 GHz : meilleure portée, 3 canaux non chevauchants seulement, partagée avec micro-ondes, Bluetooth et voisins. 5 et 6 GHz offrent bien plus de canaux."
+  },
+  {
+    "id": "q-wifi-04",
+    "type": "multiple-choice",
+    "concepts": ["rssi", "channel-utilization", "interference"],
+    "domain": "wifi",
+    "difficulty": 2,
+    "prompt": "Un client a un RSSI de −58 dBm (excellent) mais un débit très faible et une latence variable. Quelle métrique regarder ensuite ?",
+    "choices": [
+      "L’utilisation du canal (channel utilization) et le SNR : canal saturé ou interférence",
+      "Le bail DHCP",
+      "Le certificat RADIUS",
+      "La version de firmware du switch"
+    ],
+    "answer": 0,
+    "explanation": "Bon signal ≠ bonne expérience. Le Wi-Fi est un médium partagé : si le canal est occupé à 80 % par les voisins, le client attend son tour. Un SNR faible malgré un bon RSSI indique du bruit."
+  },
+  {
+    "id": "q-wifi-05",
+    "type": "multiple-choice",
+    "concepts": ["ssid", "bssid"],
+    "domain": "wifi",
+    "difficulty": 1,
+    "prompt": "Quelle est la différence entre SSID et BSSID ?",
+    "choices": [
+      "Le SSID est le nom logique du réseau, commun à plusieurs AP ; le BSSID est l’adresse MAC d’une radio/BSS précise",
+      "Le SSID est l’adresse MAC de l’AP ; le BSSID est le nom du réseau",
+      "Ce sont deux noms pour la même chose",
+      "Le BSSID est le VLAN du SSID"
+    ],
+    "answer": 0,
+    "explanation": "« Corporate » est un SSID diffusé par 100 AP ; chaque radio de chaque AP a son propre BSSID. Le BSSID dit à quel AP exact un client est associé."
+  },
+  {
+    "id": "q-wifi-06",
+    "type": "ordering",
+    "concepts": ["beacon", "association", "wpa", "dhcp"],
+    "domain": "wifi",
+    "difficulty": 2,
+    "prompt": "Remets dans l’ordre les étapes 802.11 jusqu’à la première trame de données.",
+    "items": ["Beacon / Probe (découverte du SSID)", "Authentication 802.11 (open)", "Association Request / Response", "Sécurité : 4-way handshake (PSK) ou 802.1X", "DHCP Discover"],
+    "explanation": "Découverte → authentication 802.11 (formalité) → association → sécurité réelle → seulement ensuite le client peut envoyer un DHCP Discover."
+  },
+  {
+    "id": "q-wifi-07",
+    "type": "multiple-choice",
+    "concepts": ["roaming"],
+    "domain": "wifi",
+    "difficulty": 1,
+    "prompt": "Qui prend la décision de roaming (changer d’AP) ?",
+    "choices": [
+      "Principalement le client ; le réseau peut l’aider ou l’influencer (802.11k/v/r, steering)",
+      "Toujours le contrôleur cloud",
+      "Toujours l’AP courant",
+      "Le serveur RADIUS"
+    ],
+    "answer": 0,
+    "explanation": "Le client conserve une grande partie du contrôle. Le réseau fournit des informations (k), des suggestions (v), et accélère la ré-authentification (r), mais ne décide pas à sa place."
+  },
+  {
+    "id": "q-wifi-08",
+    "type": "matching",
+    "concepts": ["80211kvr", "rrm", "band-steering"],
+    "domain": "wifi",
+    "difficulty": 2,
+    "prompt": "Associe chaque mécanisme à sa fonction.",
+    "pairs": [
+      { "left": "802.11k", "right": "L’AP fournit la liste des AP voisins" },
+      { "left": "802.11v", "right": "L’AP suggère une transition vers un autre AP" },
+      { "left": "802.11r", "right": "Ré-authentification rapide (réutilisation des clés)" },
+      { "left": "Band steering", "right": "Pousser un client vers 5/6 GHz" },
+      { "left": "RRM auto-channel", "right": "Répartir les canaux des AP pour limiter l’interférence" }
+    ],
+    "explanation": "k informe, v suggère, r accélère ; le steering influence la bande ou l’AP ; RRM règle canal et puissance pour tout le parc."
+  },
+  {
+    "id": "q-wifi-09",
+    "type": "multiple-choice",
+    "concepts": ["rrm"],
+    "domain": "wifi",
+    "difficulty": 2,
+    "prompt": "Quel problème le RRM résout-il en premier lieu ?",
+    "choices": [
+      "Choisir automatiquement canal, puissance et taille de cellule pour des dizaines ou centaines d’AP qui s’entendent mutuellement",
+      "Attribuer les adresses IP aux clients",
+      "Authentifier les utilisateurs",
+      "Mettre à jour le firmware"
+    ],
+    "answer": 0,
+    "explanation": "Avec 100 AP : quel canal ? quelle puissance ? quels voisins ? quel client où ? RRM automatise ces décisions à partir de la télémétrie."
+  },
+  {
+    "id": "q-wifi-10",
+    "type": "multiple-choice",
+    "concepts": ["dfs"],
+    "domain": "wifi",
+    "difficulty": 2,
+    "prompt": "Tous les clients d’un AP 5 GHz décrochent en même temps, puis reviennent quelques secondes plus tard sur un autre canal. Explication probable ?",
+    "choices": [
+      "Événement DFS : un radar a été détecté, l’AP a dû quitter le canal",
+      "Le serveur DHCP a redémarré",
+      "Le VLAN a changé",
+      "Le contrôleur cloud est tombé"
+    ],
+    "answer": 0,
+    "explanation": "Sur les canaux DFS, l’AP doit libérer le canal en cas de radar. Cela coupe brièvement tous les clients de cette radio. Le cloud, DHCP ou le VLAN n’expliquent pas un changement de canal."
+  },
+  {
+    "id": "q-wifi-11",
+    "type": "troubleshooting",
+    "concepts": ["association", "wifi", "dhcp"],
+    "domain": "wifi",
+    "difficulty": 1,
+    "prompt": "Le téléphone voit le SSID mais ne peut pas s’y connecter. Par où commencer ?",
+    "choices": [
+      "Association / authentification Wi-Fi : le client n’a même pas encore obtenu l’accès couche 2",
+      "DHCP",
+      "DNS",
+      "NAT"
+    ],
+    "answer": 0,
+    "explanation": "Commencer avant DHCP. « Voir » le SSID prouve seulement la radio (couche 1). L’échec est à l’association 802.11 ou à la sécurité qui suit (PSK, 802.1X)."
+  },
+  {
+    "id": "q-wifi-12",
+    "type": "free-response",
+    "concepts": ["ssid", "bssid", "vlan"],
+    "domain": "wifi",
+    "difficulty": 2,
+    "prompt": "Explique la différence entre SSID, BSSID et VLAN.",
+    "expected": [
+      { "label": "SSID = nom logique du réseau Wi-Fi", "keywords": ["nom", "logique", "réseau wi-fi", "network name"] },
+      { "label": "BSSID = adresse MAC d’une radio/AP précise", "keywords": ["mac", "radio", "ap précis", "chaque ap", "identité"] },
+      { "label": "VLAN = réseau logique de couche 2 côté filaire, vers lequel le SSID est mappé", "keywords": ["couche 2", "filaire", "mapp", "isol", "segment", "switch", "802.1q"] }
+    ],
+    "sampleAnswer": "Le SSID est le nom logique d’un réseau Wi-Fi, diffusé par plusieurs AP. Le BSSID est l’adresse MAC d’une radio précise : il identifie exactement l’AP auquel le client est associé. Le VLAN est un réseau logique de couche 2 côté filaire ; chaque SSID est mappé vers un VLAN, ce qui détermine le subnet et le DHCP du client.",
+    "explanation": "Trois identifiants, trois niveaux : réseau logique radio, instance physique, segment filaire."
+  },
+  {
+    "id": "q-wifi-13",
+    "type": "multiple-choice",
+    "concepts": ["access-point", "radius"],
+    "domain": "wifi",
+    "difficulty": 2,
+    "prompt": "Dans une architecture WPA2-Enterprise, quel équipement est le client RADIUS (NAS) ?",
+    "choices": ["L’Access Point", "Le téléphone", "Le serveur DNS", "Le contrôleur cloud"],
+    "answer": 0,
+    "explanation": "L’AP est l’Authenticator 802.1X et le RADIUS client : il envoie l’Access-Request. Le téléphone (supplicant) ne parle jamais directement à RADIUS."
+  },
+  {
+    "id": "q-wifi-14",
+    "type": "multiple-choice",
+    "concepts": ["mac-address", "station", "captive-portal"],
+    "domain": "wifi",
+    "difficulty": 2,
+    "prompt": "Un invité s’est authentifié sur le captive portal hier ; aujourd’hui il doit recommencer alors que la session devait durer 7 jours. Cause fréquente ?",
+    "choices": [
+      "Le téléphone utilise une adresse MAC aléatoire qui a changé ; le portail identifiait le client par sa MAC",
+      "Le serveur DHCP a redémarré",
+      "Le canal a changé (DFS)",
+      "Le VLAN a changé"
+    ],
+    "answer": 0,
+    "explanation": "Les OS modernes randomisent la MAC par SSID (et parfois la renouvellent). Un portail qui autorise par MAC voit un « nouveau » client."
+  },
+  {
+    "id": "q-wifi-15",
+    "type": "multiple-choice",
+    "concepts": ["ofdma", "wifi-standards"],
+    "domain": "wifi",
+    "difficulty": 2,
+    "prompt": "Quel est l’apport principal d’OFDMA (Wi-Fi 6) ?",
+    "choices": [
+      "Servir plusieurs clients dans une même transmission en découpant le canal : efficacité en environnement dense",
+      "Doubler la portée du 2.4 GHz",
+      "Remplacer WPA2 par WPA3",
+      "Supprimer le besoin de RRM"
+    ],
+    "answer": 0,
+    "explanation": "802.11ax vise l’efficacité : OFDMA remplit chaque transmission avec des « colis » pour plusieurs clients au lieu d’un camion par client."
+  },
+  {
+    "id": "q-wifi-16",
+    "type": "multiple-choice",
+    "concepts": ["client-steering", "roaming"],
+    "domain": "wifi",
+    "difficulty": 2,
+    "prompt": "Un « sticky client » reste accroché à un AP lointain avec un RSSI de −82 dBm alors qu’un AP à −55 dBm est disponible. Quelle réponse est juste ?",
+    "choices": [
+      "C’est le client qui décide de rester ; le réseau peut l’encourager via 802.11v ou en réduisant la puissance/cell size de l’AP lointain",
+      "Le contrôleur peut forcer le client vers l’autre AP instantanément et sans coupure",
+      "C’est un problème de DHCP",
+      "C’est un problème de RADIUS"
+    ],
+    "answer": 0,
+    "explanation": "Le roaming est décidé par le client. Le réseau influence : suggestion 802.11v, refus d’association, cell size plus petite pour que le client « voie » le besoin de roamer."
+  }
+]

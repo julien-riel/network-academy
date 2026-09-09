@@ -1,0 +1,326 @@
+[
+  {
+    "id": "wpa",
+    "name": "WPA2 / WPA3",
+    "aliases": ["WPA", "WPA2-Personal", "WPA3-Personal", "WPA2-Enterprise", "WPA3-Enterprise", "Open", "4-way handshake"],
+    "shortDefinition": "Familles de sécurité Wi-Fi : Personal (clé partagée) ou Enterprise (802.1X + RADIUS), en version WPA2 (2004) ou WPA3 (2018, plus robuste).",
+    "whyItExists": "Chiffrer la radio (n’importe qui peut écouter) et contrôler qui entre sur le WLAN.",
+    "whoTalksToWhom": "Station ↔ AP (handshake de clés) ; en Enterprise, AP ↔ serveur RADIUS en plus.",
+    "when": "Juste après l’association 802.11, avant DHCP.",
+    "explanation": "- **Open** : pas de chiffrement, pas d’authentification (souvent + captive portal). OWE (Enhanced Open) chiffre sans mot de passe.\n- **WPA2-Personal** : une clé partagée (PSK) pour tout le monde. Simple, mais la clé fuit et tout le monde a les mêmes droits.\n- **WPA3-Personal** : SAE remplace le handshake PSK, résistant aux attaques hors ligne par dictionnaire.\n- **WPA2-Enterprise** : identité individuelle via 802.1X/EAP, décision par un serveur RADIUS.\n- **WPA3-Enterprise** : idem avec des exigences cryptographiques plus fortes (mode 192 bits optionnel).\n\nDifférence essentielle Personal vs Enterprise : **qui décide ?** Avec PSK, l’AP décide seul (la clé est bonne ou non). Avec Enterprise, l’AP délègue la décision à RADIUS, qui peut aussi renvoyer VLAN et politique par utilisateur.",
+    "softwareAnalogy": "PSK = un mot de passe partagé d’équipe. Enterprise = SSO avec un IdP central qui renvoie des claims (VLAN, rôle).",
+    "category": "security",
+    "difficulty": 1,
+    "osiLayers": [2],
+    "prerequisites": ["association"],
+    "relatedConcepts": [
+      { "conceptId": "psk", "type": "uses", "label": "Personal utilise" },
+      { "conceptId": "sae", "type": "uses", "label": "WPA3-Personal utilise" },
+      { "conceptId": "8021x", "type": "uses", "label": "Enterprise utilise" },
+      { "conceptId": "radius", "type": "authenticates-with", "label": "Enterprise délègue à" },
+      { "conceptId": "ssid", "type": "related", "label": "politique par" }
+    ],
+    "failureSymptoms": ["Mot de passe refusé (Personal) ; « impossible de rejoindre le réseau » avant toute IP (Enterprise : voir 802.1X/EAP/certificat/RADIUS)."],
+    "sources": [{ "title": "Wi-Fi Alliance — WPA3 Specification", "url": "https://www.wi-fi.org/discover-wi-fi/security", "kind": "doc" }]
+  },
+  {
+    "id": "psk",
+    "name": "PSK / mPSK / PPSK",
+    "aliases": ["Pre-Shared Key", "mPSK", "PPSK", "multi-PSK", "private PSK", "clé par appareil"],
+    "shortDefinition": "PSK : une clé partagée pour tout le SSID. mPSK / PPSK : plusieurs clés sur le même SSID, chaque clé identifiant un appareil ou un groupe et pouvant mener à un VLAN différent.",
+    "whyItExists": "Les objets IoT ne savent pas faire 802.1X ; mPSK donne une identité par appareil sans certificat ni supplicant.",
+    "whoTalksToWhom": "Station ↔ AP ; avec mPSK, l’AP peut consulter une liste locale ou RADIUS pour savoir quelle clé correspond à quelle MAC/VLAN.",
+    "when": "Pendant le 4-way handshake, juste après l’association.",
+    "explanation": "Avec mPSK, un hôtel peut donner une clé différente à chaque chambre ou à chaque équipement IoT sur un seul SSID, et placer chacun dans son VLAN. NetExperience liste RADIUS/mPSK parmi ses fonctions. Le compromis : la clé reste un secret partagé (pas de certificat), mais la gestion est individualisée.",
+    "category": "security",
+    "difficulty": 2,
+    "osiLayers": [2],
+    "prerequisites": ["wpa"],
+    "relatedConcepts": [
+      { "conceptId": "wpa", "type": "related" },
+      { "conceptId": "vlan", "type": "assigns", "label": "peut sélectionner un" },
+      { "conceptId": "radius", "type": "related", "label": "clés parfois servies par" },
+      { "conceptId": "mac-address", "type": "uses", "label": "clé liée à une" }
+    ],
+    "failureSymptoms": ["Un appareil IoT se connecte mais atterrit dans le mauvais VLAN : mapping clé → VLAN."],
+    "sources": []
+  },
+  {
+    "id": "sae",
+    "name": "SAE",
+    "aliases": ["Simultaneous Authentication of Equals", "Dragonfly", "WPA3 handshake"],
+    "shortDefinition": "Échange de clés de WPA3-Personal qui remplace le handshake PSK de WPA2 et résiste aux attaques par dictionnaire hors ligne.",
+    "whyItExists": "Avec WPA2-PSK, capturer un handshake permet de tester des mots de passe hors ligne. SAE rend chaque tentative interactive.",
+    "explanation": "Pour l’utilisateur, rien ne change : un mot de passe. Pour l’attaquant, tout change. Le 6 GHz exige WPA3 (donc SAE ou Enterprise). Un mode « transition » permet WPA2 et WPA3 sur le même SSID.",
+    "category": "security",
+    "difficulty": 2,
+    "osiLayers": [2],
+    "prerequisites": ["wpa"],
+    "relatedConcepts": [
+      { "conceptId": "wpa", "type": "related", "label": "WPA3-Personal" },
+      { "conceptId": "psk", "type": "related", "label": "remplace le handshake" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "8021x",
+    "name": "802.1X",
+    "aliases": ["IEEE 802.1X", "port-based network access control", "EAPOL", "supplicant", "authenticator"],
+    "shortDefinition": "Contrôle d’accès réseau basé sur le port : le port (ou l’association Wi-Fi) reste fermé tant qu’un serveur d’authentification n’a pas dit oui.",
+    "whyItExists": "Donner une identité individuelle à chaque connexion (utilisateur ou appareil) plutôt qu’une clé partagée, et laisser un serveur central décider.",
+    "whoTalksToWhom": "Trois personnages : **Supplicant** (le client) ↔ **Authenticator** (l’AP ou le switch) ↔ **Authentication Server** (RADIUS). Le supplicant ne parle jamais directement à RADIUS.",
+    "when": "Juste après l’association 802.11 et avant DHCP. Le client n’a pas encore d’adresse IP.",
+    "explanation": "```\nLaptop (supplicant)\n  │  EAPOL (EAP over LAN, couche 2, sans IP)\n  ▼\nAccess Point (authenticator)\n  │  RADIUS (UDP 1812, avec IP)\n  ▼\nRADIUS Server (authentication server)\n```\n\nL’AP joue typiquement le rôle d’Authenticator dans un WLAN : il **relaie** les messages EAP du client vers RADIUS sans les interpréter, et applique la décision (Accept/Reject, VLAN). Le même mécanisme s’applique à un port de switch filaire.",
+    "softwareAnalogy": "L’AP est un reverse proxy d’authentification : il transmet le challenge/response à l’IdP et n’ouvre le port qu’avec un jeton valide.",
+    "category": "security",
+    "difficulty": 2,
+    "osiLayers": [2],
+    "prerequisites": ["association", "wpa"],
+    "actors": ["Supplicant (client)", "Authenticator (AP / switch)", "Authentication Server (RADIUS)"],
+    "packetFlow": [
+      { "from": "Supplicant", "to": "Authenticator", "label": "EAPOL-Start", "note": "Le client, associé mais bloqué, demande à s’authentifier. Pas d’IP à ce stade." },
+      { "from": "Authenticator", "to": "Supplicant", "label": "EAP-Request Identity", "note": "« Qui es-tu ? »" },
+      { "from": "Supplicant", "to": "Authenticator", "label": "EAP-Response Identity", "note": "« julien@corp ». L’AP relaie vers RADIUS." },
+      { "from": "Authenticator", "to": "RADIUS", "label": "Access-Request (EAP)", "note": "L’AP encapsule EAP dans RADIUS, ajoute SSID, MAC, nom de l’AP." },
+      { "from": "RADIUS", "to": "Authenticator", "label": "Access-Challenge (EAP)", "note": "Plusieurs allers-retours EAP (TLS…) transitent ainsi." },
+      { "from": "Authenticator", "to": "Supplicant", "label": "EAP-Request (TLS…)" },
+      { "from": "Supplicant", "to": "Authenticator", "label": "EAP-Response (TLS…)" },
+      { "from": "Authenticator", "to": "RADIUS", "label": "Access-Request (EAP)" },
+      { "from": "RADIUS", "to": "Authenticator", "label": "Access-Accept + VLAN 42", "note": "Décision + attributs (VLAN, politique). L’AP ouvre le port." },
+      { "from": "Authenticator", "to": "Supplicant", "label": "EAP-Success → 4-way handshake", "note": "Clés de chiffrement dérivées. Le client peut maintenant faire DHCP." }
+    ],
+    "relatedConcepts": [
+      { "conceptId": "eap", "type": "uses", "label": "transporte" },
+      { "conceptId": "radius", "type": "authenticates-with", "label": "délègue à" },
+      { "conceptId": "access-point", "type": "related", "label": "authenticator =" },
+      { "conceptId": "dhcp", "type": "related", "label": "précède" },
+      { "conceptId": "vlan", "type": "assigns", "label": "VLAN dynamique via" },
+      { "conceptId": "wpa", "type": "related", "label": "Enterprise" }
+    ],
+    "failureSymptoms": ["WPA2-Enterprise échoue avant l’obtention d’une IP : regarder 802.1X, EAP, certificat, RADIUS — pas DHCP en premier.", "Timeout : RADIUS injoignable (pare-feu UDP 1812, mauvais secret partagé)."],
+    "goDeeper": "IEEE 802.1X-2020. EAPOL = EAP over LAN (EtherType 0x888E). RFC 3580 décrit l’usage de RADIUS avec 802.1X, y compris les attributs Tunnel-Type / Tunnel-Private-Group-ID pour le VLAN dynamique.",
+    "sources": [
+      { "title": "IEEE 802.1X-2020 — Port-Based Network Access Control", "url": "https://standards.ieee.org/ieee/802.1X/7345/", "kind": "ieee" },
+      { "title": "RFC 3580 — IEEE 802.1X RADIUS Usage Guidelines", "url": "https://www.rfc-editor.org/rfc/rfc3580", "kind": "rfc" }
+    ]
+  },
+  {
+    "id": "eap",
+    "name": "EAP",
+    "aliases": ["Extensible Authentication Protocol", "EAP-TLS", "PEAP", "EAP-TTLS", "méthode EAP"],
+    "shortDefinition": "Cadre (framework) d’authentification extensible qui transporte une « méthode » (EAP-TLS, PEAP, TTLS) entre le supplicant et le serveur d’authentification.",
+    "whyItExists": "Pouvoir changer de méthode (certificat, mot de passe, SIM) sans changer l’AP ni le protocole de transport.",
+    "whoTalksToWhom": "Supplicant ↔ Authentication Server (de bout en bout) ; l’AP relaie sans comprendre la méthode.",
+    "when": "Pendant 802.1X, avant DHCP.",
+    "explanation": "EAP peut fonctionner directement au-dessus d’une couche de liaison, **sans nécessiter IP** entre le supplicant et l’authenticator — c’est pourquoi il marche avant DHCP. Entre l’AP et RADIUS, les messages EAP sont encapsulés dans RADIUS (attribut EAP-Message).\n\n- **EAP-TLS** : certificat client + certificat serveur. Le plus robuste, nécessite une PKI.\n- **PEAP / EAP-TTLS** : tunnel TLS (certificat serveur seulement) puis mot de passe à l’intérieur.\n\nDans tous les cas, le client doit **faire confiance au certificat du serveur RADIUS** ; sinon il refuse de se connecter, souvent silencieusement.",
+    "softwareAnalogy": "EAP est à l’authentification ce que OAuth est aux flux : un cadre avec des « grant types » interchangeables. L’AP est un proxy transparent.",
+    "category": "security",
+    "difficulty": 2,
+    "osiLayers": [2],
+    "prerequisites": ["8021x"],
+    "relatedConcepts": [
+      { "conceptId": "8021x", "type": "runs-over", "label": "transporté par (EAPOL)" },
+      { "conceptId": "radius", "type": "runs-over", "label": "encapsulé dans" },
+      { "conceptId": "certificates", "type": "uses" },
+      { "conceptId": "eap-tls", "type": "related", "label": "méthode" }
+    ],
+    "failureSymptoms": ["Échec après l’association, avant toute IP : méthode EAP non supportée, certificat serveur non reconnu, identifiants invalides."],
+    "sources": [{ "title": "RFC 3748 — Extensible Authentication Protocol (EAP)", "url": "https://www.rfc-editor.org/rfc/rfc3748", "kind": "rfc" }]
+  },
+  {
+    "id": "eap-tls",
+    "name": "EAP-TLS",
+    "aliases": ["authentification par certificat"],
+    "shortDefinition": "Méthode EAP où client et serveur s’authentifient mutuellement par certificats X.509.",
+    "whyItExists": "Pas de mot de passe à voler ; chaque appareil a son identité cryptographique.",
+    "explanation": "Nécessite de distribuer un certificat à chaque client (MDM, SCEP) et une CA de confiance. C’est aussi la méthode utilisée par Passpoint/OpenRoaming avec des profils.",
+    "category": "security",
+    "difficulty": 3,
+    "osiLayers": [2],
+    "prerequisites": ["eap", "certificates"],
+    "relatedConcepts": [
+      { "conceptId": "eap", "type": "related" },
+      { "conceptId": "certificates", "type": "uses" },
+      { "conceptId": "passpoint", "type": "related", "label": "souvent utilisé par" }
+    ],
+    "failureSymptoms": ["Certificat client expiré ou horloge fausse → Access-Reject."],
+    "sources": [{ "title": "RFC 5216 — EAP-TLS", "url": "https://www.rfc-editor.org/rfc/rfc5216", "kind": "rfc" }]
+  },
+  {
+    "id": "certificates",
+    "name": "Certificats",
+    "aliases": ["X.509", "TLS", "CA", "PKI", "device certificate"],
+    "shortDefinition": "Identités cryptographiques signées par une autorité de confiance, utilisées par EAP-TLS, par le serveur RADIUS, par le portail captif HTTPS et par l’AP pour parler au cloud.",
+    "whyItExists": "Prouver une identité sans secret partagé, et chiffrer.",
+    "explanation": "Dans ce cours, les certificats apparaissent à quatre endroits : (1) le serveur RADIUS présente un certificat que le client doit reconnaître ; (2) EAP-TLS ajoute un certificat client ; (3) le captive portal est en HTTPS ; (4) chaque AP OpenWiFi possède un **certificat device** (issu de l’usine ou de TIP) pour s’authentifier auprès du Gateway uCentral. Tous dépendent d’une horloge juste (NTP).",
+    "category": "security",
+    "difficulty": 2,
+    "prerequisites": [],
+    "relatedConcepts": [
+      { "conceptId": "eap-tls", "type": "related" },
+      { "conceptId": "radius", "type": "related", "label": "certificat serveur" },
+      { "conceptId": "device-certificate", "type": "related" },
+      { "conceptId": "ntp", "type": "depends-on" }
+    ],
+    "failureSymptoms": ["« Certificat non approuvé » sur le téléphone ; AP qui n’arrive pas à joindre le cloud après changement de certificat."],
+    "sources": []
+  },
+  {
+    "id": "radius",
+    "name": "RADIUS",
+    "aliases": ["Remote Authentication Dial-In User Service", "serveur AAA", "NAS", "Access-Request", "Access-Accept"],
+    "shortDefinition": "Protocole client-serveur par lequel un équipement réseau (l’AP, appelé NAS) demande à un serveur central s’il doit admettre un client, et avec quels attributs.",
+    "whyItExists": "Centraliser la décision d’accès (et ses règles : VLAN, durée, débit) au lieu de la coder dans chaque AP.",
+    "whoTalksToWhom": "AP / switch (RADIUS client, NAS) ↔ serveur RADIUS. **Le téléphone ne parle jamais à RADIUS directement.**",
+    "when": "Pendant 802.1X (avant DHCP), ou pour valider une clé mPSK / une MAC, ou depuis un captive portal.",
+    "explanation": "AAA :\n- **Authentication** — Qui es-tu ?\n- **Authorization** — Qu’as-tu le droit de faire ? (VLAN, ACL, débit)\n- **Accounting** — Qu’as-tu fait / combien as-tu consommé ? (sessions, octets)\n\nExemple :\n```\nAP → RADIUS   Access-Request   user=julien  AP=lobby-17  SSID=Corporate\nRADIUS → AP   Access-Accept    VLAN=42  policy=employees\n```\n\nAutres messages : **Access-Reject** (non), **Access-Challenge** (« continue l’échange EAP »), **CoA** (changer l’autorisation d’une session en cours), **Disconnect**. RADIUS utilise UDP : sans réponse, l’AP réessaie puis abandonne → timeout côté client.",
+    "softwareAnalogy": "RADIUS joue le rôle d’un service AAA central auquel l’AP délègue une décision d’accès — comme une API d’autorisation (policy decision point) que l’AP appelle avec le contexte de la requête.",
+    "category": "security",
+    "difficulty": 2,
+    "osiLayers": [7],
+    "prerequisites": ["8021x", "udp"],
+    "actors": ["NAS (AP / switch)", "Serveur RADIUS"],
+    "ports": [{ "protocol": "UDP", "port": 1812, "role": "authentication" }, { "protocol": "UDP", "port": 1813, "role": "accounting" }, { "protocol": "UDP", "port": 3799, "role": "CoA / Disconnect" }],
+    "packetFlow": [
+      { "from": "AP", "to": "RADIUS", "label": "Access-Request (user, MAC, SSID, AP)", "note": "L’AP demande une décision et fournit le contexte." },
+      { "from": "RADIUS", "to": "AP", "label": "Access-Challenge", "note": "Optionnel, répété : continue l’échange EAP." },
+      { "from": "AP", "to": "RADIUS", "label": "Access-Request (EAP suite)" },
+      { "from": "RADIUS", "to": "AP", "label": "Access-Accept + VLAN, policy", "note": "Ou Access-Reject. L’AP applique." },
+      { "from": "AP", "to": "RADIUS", "label": "Accounting-Request (Start)", "note": "UDP 1813 : la session commence." },
+      { "from": "RADIUS", "to": "AP", "label": "CoA / Disconnect", "note": "Plus tard : modifier ou couper la session (UDP 3799)." }
+    ],
+    "relatedConcepts": [
+      { "conceptId": "aaa", "type": "related", "label": "implémente" },
+      { "conceptId": "8021x", "type": "related", "label": "serveur d’auth de" },
+      { "conceptId": "eap", "type": "encapsulates" },
+      { "conceptId": "vlan", "type": "assigns", "label": "peut attribuer un" },
+      { "conceptId": "access-point", "type": "related", "label": "client = l’" },
+      { "conceptId": "udp", "type": "runs-over" },
+      { "conceptId": "coa", "type": "uses" },
+      { "conceptId": "captive-portal", "type": "related", "label": "souvent derrière un" },
+      { "conceptId": "openroaming", "type": "related", "label": "fédéré par" }
+    ],
+    "failureSymptoms": ["Tous les clients Enterprise échouent d’un coup : serveur RADIUS down, injoignable (pare-feu UDP 1812) ou secret partagé incorrect.", "Un seul utilisateur refusé : identifiants, certificat, compte désactivé.", "Accept OK mais pas d’IP : VLAN renvoyé inexistant sur le switch."],
+    "goDeeper": "RFC 2865 (authentification/autorisation, UDP 1812), RFC 2866 (accounting, UDP 1813), RFC 5176 (CoA / Disconnect). Le « secret partagé » entre NAS et serveur signe les paquets. RadSec (RFC 6614) transporte RADIUS sur TLS/TCP, utilisé par OpenRoaming.",
+    "sources": [
+      { "title": "RFC 2865 — RADIUS", "url": "https://www.rfc-editor.org/rfc/rfc2865", "kind": "rfc" },
+      { "title": "RFC 2866 — RADIUS Accounting", "url": "https://www.rfc-editor.org/rfc/rfc2866", "kind": "rfc" },
+      { "title": "RFC 5176 — Dynamic Authorization Extensions (CoA)", "url": "https://www.rfc-editor.org/rfc/rfc5176", "kind": "rfc" }
+    ]
+  },
+  {
+    "id": "aaa",
+    "name": "AAA",
+    "aliases": ["Authentication, Authorization, Accounting"],
+    "shortDefinition": "Les trois fonctions d’un serveur d’accès : qui es-tu, qu’as-tu le droit de faire, qu’as-tu consommé.",
+    "whyItExists": "Séparer clairement l’identité, les droits et la traçabilité.",
+    "explanation": "RADIUS est l’implémentation AAA la plus répandue pour le réseau. Authentication → Access-Accept/Reject. Authorization → attributs (VLAN, ACL, bande passante). Accounting → Accounting-Request Start/Interim/Stop.",
+    "softwareAnalogy": "AuthN / AuthZ / audit log.",
+    "category": "security",
+    "difficulty": 1,
+    "prerequisites": [],
+    "relatedConcepts": [{ "conceptId": "radius", "type": "related", "label": "implémenté par" }],
+    "sources": []
+  },
+  {
+    "id": "coa",
+    "name": "CoA / Disconnect",
+    "aliases": ["Change of Authorization", "RFC 5176", "Disconnect-Request"],
+    "shortDefinition": "Messages RADIUS envoyés par le serveur vers l’AP pour modifier dynamiquement l’autorisation d’une session existante (VLAN, débit) ou la couper.",
+    "whyItExists": "Sans CoA, une décision prise à la connexion ne peut plus changer : un invité qui paie ou dont le quota expire devrait se reconnecter.",
+    "whoTalksToWhom": "Serveur RADIUS → AP (inversion du sens habituel, UDP 3799).",
+    "when": "Après la connexion : paiement sur captive portal, quota atteint, appareil mis en quarantaine.",
+    "explanation": "Typique en captive portal : le client est d’abord admis dans un walled garden ; quand il accepte les conditions, le serveur envoie un CoA à l’AP pour lever la restriction sans déconnexion.",
+    "category": "security",
+    "difficulty": 3,
+    "osiLayers": [7],
+    "prerequisites": ["radius"],
+    "relatedConcepts": [
+      { "conceptId": "radius", "type": "related" },
+      { "conceptId": "captive-portal", "type": "related", "label": "utilisé par" }
+    ],
+    "failureSymptoms": ["Le portail dit « connecté » mais Internet reste bloqué : CoA non reçu par l’AP (port 3799 filtré)."],
+    "sources": [{ "title": "RFC 5176", "url": "https://www.rfc-editor.org/rfc/rfc5176", "kind": "rfc" }]
+  },
+  {
+    "id": "captive-portal",
+    "name": "Captive portal",
+    "aliases": ["portail captif", "walled garden", "CAPPORT", "RFC 8908", "RFC 8910", "redirect"],
+    "shortDefinition": "Page Web imposée à un client déjà connecté au réseau (IP obtenue) avant de lui donner accès à Internet : conditions, login, paiement.",
+    "whyItExists": "Sur un Wi-Fi ouvert (hôtel, aéroport), il faut une acceptation, une identification ou un paiement — sans exiger 802.1X.",
+    "whoTalksToWhom": "Client → (accès limité : walled garden) → portail HTTPS → backend d’autorisation → AP/gateway (lève la restriction, souvent via RADIUS/CoA).",
+    "when": "**Après** association, authentification Wi-Fi et DHCP. Le client a une IP mais Internet est bloqué.",
+    "explanation": "Distinguer deux choses : l’**authentification Wi-Fi** permet d’entrer sur le WLAN ; le **captive portal** contrôle l’accès aux ressources après que le client soit déjà sur le réseau.\n\n```\nClient → association Wi-Fi → DHCP → IP obtenue → Internet bloqué\n  → détection captive (l’OS teste une URL connue)\n  → redirection vers le portail HTTPS\n  → accept terms / login / payment\n  → autorisation (par MAC/IP, souvent via RADIUS + CoA)\n  → Internet\n```\n\nLe **walled garden** est la liste des destinations autorisées avant autorisation (le portail lui-même, le fournisseur de paiement). Les portails historiques reposent sur l’interception DNS/HTTP et les tests que font les appareils ; le standard **CAPPORT** formalise une approche plus propre : RFC 8910 annonce le portail via DHCP (option 114) ou RA, RFC 8908 définit une API HTTPS pour connaître son état de captivité.",
+    "softwareAnalogy": "Un middleware d’autorisation devant l’accès Internet : la session existe (IP), mais chaque requête est refusée tant qu’un flag « authorized » n’est pas posé sur l’identité (MAC/IP).",
+    "category": "security",
+    "difficulty": 2,
+    "osiLayers": [7],
+    "prerequisites": ["dhcp", "dns", "wpa"],
+    "actors": ["Client", "AP / gateway", "Portail Web", "Backend d’autorisation (RADIUS)"],
+    "packetFlow": [
+      { "from": "Client", "to": "AP / gateway", "label": "HTTP GET captive.apple.com", "note": "L’OS teste une URL connue pour détecter la captivité." },
+      { "from": "AP / gateway", "to": "Client", "label": "302 → https://portal/…", "note": "Réponse inattendue : l’OS ouvre le portail." },
+      { "from": "Client", "to": "Portail Web", "label": "HTTPS : page, login, accept", "note": "Le portail est dans le walled garden." },
+      { "from": "Portail Web", "to": "AP / gateway", "label": "Autoriser MAC (RADIUS / CoA / API)", "note": "La restriction est levée pour ce client." },
+      { "from": "Client", "to": "AP / gateway", "label": "Trafic Internet", "note": "Passe désormais." }
+    ],
+    "relatedConcepts": [
+      { "conceptId": "dhcp", "type": "depends-on", "label": "après" },
+      { "conceptId": "dns", "type": "uses", "label": "souvent intercepte le" },
+      { "conceptId": "radius", "type": "uses", "label": "autorisation via" },
+      { "conceptId": "coa", "type": "uses" },
+      { "conceptId": "mac-address", "type": "uses", "label": "identité client =" },
+      { "conceptId": "vlan", "type": "related", "label": "SSID Guest →" },
+      { "conceptId": "wpa", "type": "related", "label": "≠ authentification Wi-Fi" }
+    ],
+    "failureSymptoms": ["IP obtenue mais le portail ne s’affiche pas : HTTPS partout (pas d’interception possible), DNS bloqué, walled garden incomplet.", "Après login, toujours pas d’Internet : autorisation non appliquée (CoA), MAC aléatoire changée."],
+    "goDeeper": "RFC 8952 (architecture CAPPORT), RFC 8908 (Captive Portal API), RFC 8910 (découverte via DHCP option 114 / RA). Les OS (iOS, Android, Windows) font des requêtes de détection vers des URL fixes ; toute réponse différente de l’attendue déclenche la mini-fenêtre du portail.",
+    "sources": [
+      { "title": "RFC 8952 — Captive Portal Architecture", "url": "https://www.rfc-editor.org/rfc/rfc8952", "kind": "rfc" },
+      { "title": "RFC 8908 — Captive Portal API", "url": "https://www.rfc-editor.org/rfc/rfc8908", "kind": "rfc" },
+      { "title": "RFC 8910 — Captive-Portal Identification in DHCP and RA", "url": "https://www.rfc-editor.org/rfc/rfc8910", "kind": "rfc" }
+    ]
+  },
+  {
+    "id": "passpoint",
+    "name": "Passpoint",
+    "aliases": ["Hotspot 2.0", "802.11u", "ANQP"],
+    "shortDefinition": "Standard Wi-Fi Alliance qui permet à un appareil de découvrir, sélectionner et rejoindre automatiquement un réseau Wi-Fi compatible avec une expérience proche du cellulaire.",
+    "whyItExists": "Éviter le choix manuel de SSID et le captive portal : un profil installé une fois, une connexion automatique et sécurisée partout.",
+    "whoTalksToWhom": "Client ↔ AP (802.11u/ANQP : « quels opérateurs acceptes-tu ? ») puis 802.1X/EAP vers le serveur RADIUS de l’identité du client.",
+    "when": "À la découverte du réseau, avant l’association.",
+    "explanation": "Le client possède un profil (identité + méthode EAP). L’AP annonce les identités qu’il accepte. Si ça correspond, la connexion est WPA2/3-Enterprise, sans intervention. Passpoint est la brique technique ; OpenRoaming ajoute la fédération.",
+    "category": "security",
+    "difficulty": 3,
+    "osiLayers": [2],
+    "prerequisites": ["8021x", "eap"],
+    "relatedConcepts": [
+      { "conceptId": "openroaming", "type": "related", "label": "brique de" },
+      { "conceptId": "8021x", "type": "uses" },
+      { "conceptId": "eap-tls", "type": "uses" },
+      { "conceptId": "roaming", "type": "related", "label": "inter-réseaux" }
+    ],
+    "sources": [{ "title": "Wi-Fi Alliance — Passpoint", "url": "https://www.wi-fi.org/discover-wi-fi/passpoint", "kind": "doc" }]
+  },
+  {
+    "id": "openroaming",
+    "name": "OpenRoaming",
+    "aliases": ["WBA OpenRoaming", "fédération d’identité Wi-Fi"],
+    "shortDefinition": "Fédération (Wireless Broadband Alliance) qui relie fournisseurs d’identité et réseaux d’accès pour connecter automatiquement les utilisateurs à des réseaux partenaires via Passpoint.",
+    "whyItExists": "Un utilisateur avec une identité (opérateur, Google, entreprise) devrait pouvoir se connecter sur n’importe quel réseau participant sans portail ni mot de passe.",
+    "whoTalksToWhom": "AP → RADIUS local → fédération (RadSec) → serveur RADIUS du fournisseur d’identité du client.",
+    "when": "Lors du 802.1X, l’authentification est routée vers le bon IdP selon le domaine (realm) de l’identité.",
+    "explanation": "À relier à RADIUS, EAP, 802.1X, identité, roaming, certificats. NetExperience indique supporter Passpoint et OpenRoaming. Pour un développeur : c’est du SSO fédéré pour l’accès réseau, avec RADIUS comme transport et des certificats pour la confiance entre membres.",
+    "softwareAnalogy": "Comme « Se connecter avec Google » : le réseau fait confiance à un IdP tiers via une fédération.",
+    "category": "security",
+    "difficulty": 3,
+    "osiLayers": [7],
+    "prerequisites": ["passpoint", "radius"],
+    "relatedConcepts": [
+      { "conceptId": "passpoint", "type": "uses" },
+      { "conceptId": "radius", "type": "uses", "label": "fédère des serveurs" },
+      { "conceptId": "certificates", "type": "uses" }
+    ],
+    "sources": [{ "title": "WBA — OpenRoaming", "url": "https://wballiance.com/openroaming/", "kind": "doc" }]
+  }
+]

@@ -1,0 +1,96 @@
+{
+  "id": "osi",
+  "order": 1,
+  "title": "La carte du réseau (OSI)",
+  "subtitle": "Retrouver les grandes couches sans mémorisation excessive, et savoir dire « c’est un problème de couche 2 ».",
+  "domain": "fundamentals",
+  "concepts": ["osi-model", "frame", "mac-address", "ip", "tcp", "udp"],
+  "prerequisites": [],
+  "quiz": ["q-osi-01", "q-osi-02", "q-osi-03", "q-osi-04", "q-osi-05", "q-osi-06", "q-net-11"],
+  "lessons": [
+    {
+      "id": "osi-1",
+      "title": "Pourquoi une carte ?",
+      "minutes": 6,
+      "blocks": [
+        {
+          "type": "callout",
+          "kind": "idea",
+          "title": "L’histoire qui guide tout le cours",
+          "text": "« Mon téléphone se connecte au Wi-Fi. Que se passe-t-il ? » Téléphone → détection du SSID → association 802.11 → authentification Wi-Fi → obtention d’une adresse IP (DHCP) → ARP / Neighbor Discovery → passerelle → DNS → Internet. Chaque étape vit dans une couche. Le modèle OSI est la carte qui permet de dire **où** on en est."
+        },
+        {
+          "type": "paragraph",
+          "text": "Le modèle OSI (Open Systems Interconnection, défini par l’ISO dans ISO/IEC 7498-1) découpe la communication en 7 couches. Chaque couche offre un service à celle du dessus et s’appuie sur celle du dessous. C’est exactement la logique d’une pile d’abstractions logicielles : HTTP ne sait rien des câbles, comme ton ORM ne sait rien du disque."
+        },
+        {
+          "type": "table",
+          "headers": ["#", "Couche", "À retenir"],
+          "rows": [
+            ["7", "Application", "HTTP, DNS, DHCP, RADIUS"],
+            ["6", "Presentation", "représentation, chiffrement"],
+            ["5", "Session", "sessions et dialogues"],
+            ["4", "Transport", "TCP, UDP"],
+            ["3", "Network", "IP, routage, ICMP"],
+            ["2", "Data Link", "Ethernet, Wi-Fi, MAC, VLAN"],
+            ["1", "Physical", "câble, fibre, radio"]
+          ]
+        },
+        {
+          "type": "callout",
+          "kind": "warning",
+          "text": "Le modèle OSI est un **modèle conceptuel**, pas une description littérale de toutes les implémentations modernes. ARP, TLS, les tunnels et plusieurs technologies ne rentrent pas parfaitement dans une seule case. Personne ne te demandera de placer la couche Session ; on te demandera de savoir que DHCP ne peut pas marcher si le VLAN est faux."
+        },
+        {
+          "type": "diagram",
+          "title": "Ce que la carte permet de dire",
+          "text": "« Le client voit le SSID mais n’a pas d’IP »\n\n  L7  DNS / HTTP        ✗ (pas encore)\n  L4  TCP / UDP         ✗\n  L3  IP (DHCP)         ✗  ← le problème est ici ou en dessous\n  L2  Wi-Fi assoc/auth  ?  ← à vérifier d’abord\n  L1  Radio             ✓ (SSID visible)\n\nRègle : une couche ne fonctionne que si celles du dessous fonctionnent."
+        },
+        { "type": "concepts", "ids": ["osi-model"] },
+        {
+          "type": "takeaways",
+          "items": [
+            "7 couches, mais trois groupes suffisent au quotidien : **L1–L2** (radio, Ethernet, Wi-Fi, MAC, VLAN), **L3–L4** (IP, routage, TCP/UDP), **L7** (DHCP, DNS, RADIUS, HTTP).",
+            "Un problème en bas empêche tout ce qui est au-dessus.",
+            "OSI est une carte, pas une loi."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "osi-2",
+      "title": "Trame, paquet, adresses",
+      "minutes": 6,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Deux adresses coexistent sur chaque hôte. L’**adresse MAC** (couche 2) identifie l’interface physique sur le réseau local. L’**adresse IP** (couche 3) identifie l’hôte et le réseau où il se trouve, à l’échelle du monde. Un switch décide avec les MAC ; un routeur décide avec les IP."
+        },
+        {
+          "type": "diagram",
+          "title": "Encapsulation d’un message RADIUS envoyé par un AP",
+          "text": "┌──────────────────────────────────────────────────────────────┐\n│ Ethernet  MAC AP → MAC gateway                     (couche 2) │\n│ ┌──────────────────────────────────────────────────────────┐ │\n│ │ IP  10.0.5.20 (AP) → 10.0.1.5 (RADIUS)         (couche 3) │ │\n│ │ ┌──────────────────────────────────────────────────────┐ │ │\n│ │ │ UDP  port dst 1812                         (couche 4) │ │ │\n│ │ │ ┌──────────────────────────────────────────────────┐ │ │ │\n│ │ │ │ RADIUS  Access-Request  user=julien    (couche 7) │ │ │ │\n│ │ │ └──────────────────────────────────────────────────┘ │ │ │\n│ │ └──────────────────────────────────────────────────────┘ │ │\n│ └──────────────────────────────────────────────────────────┘ │\n└──────────────────────────────────────────────────────────────┘\n\nÀ chaque saut de routeur, l’en-tête Ethernet change (nouvelles MAC).\nL’en-tête IP reste le même de bout en bout (sauf NAT)."
+        },
+        { "type": "concepts", "ids": ["mac-address", "frame"] },
+        {
+          "type": "paragraph",
+          "text": "Couche 4 : **TCP** (connexion, fiabilité, ordre — HTTP, TLS) et **UDP** (sans connexion, léger — DNS, DHCP, RADIUS, NTP). Retiens surtout que les protocoles d’infrastructure de ce cours (DHCP, DNS, RADIUS) sont en UDP : quand ça échoue, ça échoue en **silence** (timeout), pas avec une erreur."
+        },
+        { "type": "concepts", "ids": ["tcp", "udp"] },
+        {
+          "type": "exercise",
+          "title": "Exercice : glisser chaque protocole vers une couche",
+          "questionIds": ["q-osi-01", "q-osi-02"]
+        },
+        {
+          "type": "takeaways",
+          "items": [
+            "MAC = identité locale (couche 2). IP = identité routable (couche 3).",
+            "Switch → MAC. Routeur → IP. AP → pont entre radio et Ethernet (couche 2).",
+            "DHCP, DNS, RADIUS, NTP tournent sur UDP : une panne se voit comme un timeout."
+          ]
+        }
+      ]
+    }
+  ]
+}

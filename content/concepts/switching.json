@@ -1,0 +1,177 @@
+[
+  {
+    "id": "ethernet",
+    "name": "Ethernet",
+    "aliases": ["802.3", "câble RJ45"],
+    "shortDefinition": "Technologie de couche 1–2 filaire qui transporte des trames adressées par MAC entre équipements d’un réseau local.",
+    "whyItExists": "Il faut un lien physique standardisé et un format de trame commun pour que switches, AP, serveurs et PC se parlent.",
+    "whoTalksToWhom": "Hôte ↔ switch ↔ hôte, trame par trame, à l’intérieur d’un VLAN.",
+    "when": "Sous tout le reste : sans lien Ethernet fonctionnel (ou son équivalent Wi-Fi), rien d’autre ne passe.",
+    "explanation": "Une trame Ethernet contient MAC destination, MAC source, un tag VLAN optionnel (802.1Q), le type (IPv4, IPv6, ARP, EAPOL…) et la charge utile. Le Wi-Fi remplace le câble entre le client et le switch : côté réseau, l’AP re-émet des trames Ethernet classiques.",
+    "category": "switching",
+    "difficulty": 1,
+    "osiLayers": [1, 2],
+    "prerequisites": ["osi-model", "mac-address"],
+    "relatedConcepts": [
+      { "conceptId": "switch", "type": "uses" },
+      { "conceptId": "vlan", "type": "encapsulates", "label": "tag 802.1Q" },
+      { "conceptId": "wifi", "type": "related", "label": "remplacé par" },
+      { "conceptId": "poe", "type": "related", "label": "alimente via" },
+      { "conceptId": "frame", "type": "related" }
+    ],
+    "failureSymptoms": ["Port down, pas de lien : câble, port désactivé, négociation de vitesse."],
+    "sources": [{ "title": "IEEE 802.3 — Ethernet", "url": "https://standards.ieee.org/ieee/802.3/7071/", "kind": "ieee" }]
+  },
+  {
+    "id": "switch",
+    "name": "Switch",
+    "aliases": ["commutateur", "MAC table", "managed switch"],
+    "shortDefinition": "Équipement de couche 2 qui apprend quelle adresse MAC est derrière quel port et ne transmet chaque trame que là où il faut.",
+    "whyItExists": "Pour relier de nombreux hôtes sans que chacun reçoive le trafic des autres (contrairement à un hub), et pour segmenter avec les VLAN.",
+    "whoTalksToWhom": "Reçoit une trame sur un port, la transmet sur le port où la MAC de destination a été apprise (ou sur tous les ports du VLAN si inconnue/broadcast).",
+    "when": "À chaque trame.",
+    "explanation": "Table MAC : « MAC X vue sur port 7, VLAN 10 ». Un switch **managé** permet de configurer VLAN, trunk, PoE, LLDP, STP, LACP et d’exposer de la télémétrie — c’est ce qu’OpenLAN pilote depuis le cloud.\n\nDifférence clé : un switch décide avec les **MAC** ; un routeur décide avec les **IP**.",
+    "softwareAnalogy": "Un message broker qui route par en-tête « destination » et apprend les abonnés en observant qui parle.",
+    "category": "switching",
+    "difficulty": 1,
+    "osiLayers": [2],
+    "prerequisites": ["ethernet", "mac-address"],
+    "relatedConcepts": [
+      { "conceptId": "vlan", "type": "controls", "label": "segmente en" },
+      { "conceptId": "trunk", "type": "uses" },
+      { "conceptId": "router", "type": "related", "label": "≠ décide avec les IP" },
+      { "conceptId": "access-point", "type": "related", "label": "raccorde les" },
+      { "conceptId": "openlan", "type": "controls", "label": "géré via" },
+      { "conceptId": "stp", "type": "uses" }
+    ],
+    "failureSymptoms": ["Deux hôtes du même VLAN ne se voient pas : port dans le mauvais VLAN, port désactivé, STP bloquant."],
+    "sources": []
+  },
+  {
+    "id": "vlan",
+    "name": "VLAN",
+    "aliases": ["802.1Q", "Virtual LAN", "VLAN ID", "tagged", "untagged"],
+    "shortDefinition": "Réseau logique de couche 2 : plusieurs réseaux isolés sur la même infrastructure physique, identifiés par un numéro (VLAN ID, 1–4094).",
+    "whyItExists": "Isoler Corporate, Guest et IoT sans tirer trois réseaux de câbles ; limiter les broadcasts ; appliquer des politiques par population.",
+    "whoTalksToWhom": "Les hôtes d’un même VLAN se parlent en couche 2 ; entre VLAN, il faut passer par un routeur (routage inter-VLAN).",
+    "when": "Dès qu’un client est admis sur le réseau : l’AP ou le switch place ses trames dans un VLAN (fixe par SSID/port, ou attribué dynamiquement par RADIUS).",
+    "explanation": "Scénario type : SSID Corporate → VLAN 10, SSID Guest → VLAN 20, SSID IoT → VLAN 30. Même AP, même switch, trois réseaux logiques, trois subnets, trois scopes DHCP.\n\n- **Access port / untagged** : le port appartient à un seul VLAN ; les trames circulent sans tag (vers un PC, une imprimante).\n- **Trunk / tagged** : le port transporte plusieurs VLAN, chaque trame porte un tag 802.1Q (vers un AP multi-SSID, un autre switch).\n\nLe VLAN délimite le domaine de broadcast : DHCP Discover ne sort pas du VLAN. Un mauvais mapping SSID → VLAN donne des IP du mauvais réseau, ou aucune IP.",
+    "softwareAnalogy": "Un namespace Kubernetes ou un VPC : même cluster physique, isolation logique, et il faut une route explicite pour traverser.",
+    "category": "switching",
+    "difficulty": 1,
+    "osiLayers": [2],
+    "prerequisites": ["ethernet", "switch"],
+    "relatedConcepts": [
+      { "conceptId": "trunk", "type": "runs-over", "label": "transporté par" },
+      { "conceptId": "subnet", "type": "assigns", "label": "détermine le" },
+      { "conceptId": "dhcp", "type": "controls", "label": "délimite le scope" },
+      { "conceptId": "ssid", "type": "related", "label": "mappé depuis un" },
+      { "conceptId": "radius", "type": "related", "label": "peut être attribué par" },
+      { "conceptId": "router", "type": "depends-on", "label": "routage inter-VLAN" },
+      { "conceptId": "broadcast", "type": "controls", "label": "délimite le domaine" }
+    ],
+    "failureSymptoms": ["Les invités reçoivent des IP du réseau Corporate : mapping SSID → VLAN incorrect.", "Pas d’IP du tout : VLAN non autorisé sur le trunk vers l’AP.", "Association OK, RADIUS Accept OK, pas d’IP : VLAN attribué par RADIUS absent sur le switch."],
+    "goDeeper": "IEEE 802.1Q ajoute 4 octets dans la trame Ethernet : TPID 0x8100 + PCP (priorité) + VLAN ID (12 bits). Le « native VLAN » d’un trunk circule sans tag. En Wi-Fi, un SSID peut aussi porter plusieurs VLAN (dynamic VLAN par RADIUS Tunnel-Private-Group-ID).",
+    "sources": [
+      { "title": "IEEE 802.1Q — Bridges and Bridged Networks", "url": "https://standards.ieee.org/ieee/802.1Q/10323/", "kind": "ieee" },
+      { "title": "RFC 3580 — IEEE 802.1X RADIUS Usage Guidelines (VLAN attributes)", "url": "https://www.rfc-editor.org/rfc/rfc3580", "kind": "rfc" }
+    ]
+  },
+  {
+    "id": "trunk",
+    "name": "Trunk / Access port",
+    "aliases": ["trunk port", "access port", "port tagged", "port untagged", "native VLAN"],
+    "shortDefinition": "Un access port appartient à un seul VLAN (untagged) ; un trunk transporte plusieurs VLAN avec des tags 802.1Q.",
+    "whyItExists": "Un AP multi-SSID ou un lien entre deux switches doit porter plusieurs VLAN sur un seul câble.",
+    "whoTalksToWhom": "Switch ↔ AP, switch ↔ switch, switch ↔ routeur (trunk) ; switch ↔ PC/imprimante (access).",
+    "when": "Configuration statique du port (ou poussée par OpenLAN).",
+    "explanation": "Vers un AP à trois SSID (VLAN 10/20/30), le port du switch doit être un trunk autorisant ces trois VLAN, et l’AP doit tagger les trames de chaque SSID avec le bon VLAN ID. Si le VLAN 20 n’est pas autorisé sur le trunk, les clients Guest n’auront jamais de DHCP.",
+    "category": "switching",
+    "difficulty": 2,
+    "osiLayers": [2],
+    "prerequisites": ["vlan"],
+    "relatedConcepts": [
+      { "conceptId": "vlan", "type": "encapsulates", "label": "transporte plusieurs" },
+      { "conceptId": "access-point", "type": "related", "label": "raccordé en trunk" },
+      { "conceptId": "switch", "type": "related" }
+    ],
+    "failureSymptoms": ["Un SSID fonctionne, l’autre non : VLAN manquant sur le trunk.", "Native VLAN différent des deux côtés : trafic untagged qui atterrit dans le mauvais réseau."],
+    "sources": []
+  },
+  {
+    "id": "stp",
+    "name": "STP / RSTP",
+    "aliases": ["Spanning Tree", "802.1D", "802.1w", "boucle"],
+    "shortDefinition": "Protocole qui empêche les boucles de couche 2 en bloquant des ports redondants (RSTP : version rapide).",
+    "whyItExists": "Ethernet n’a pas de TTL : une boucle entre switches provoque une tempête de broadcast qui met le réseau à genoux.",
+    "whoTalksToWhom": "Switch ↔ switch (BPDU).",
+    "when": "En continu ; reconvergence lors d’un changement de topologie.",
+    "explanation": "Les switches élisent un « root bridge » et bloquent les chemins redondants. Un port qui vient d’être activé peut rester bloqué quelques secondes (RSTP : rapide, STP classique : jusqu’à 30–50 s), ce qui explique parfois un AP « lent à démarrer ».",
+    "category": "switching",
+    "difficulty": 2,
+    "osiLayers": [2],
+    "prerequisites": ["switch"],
+    "relatedConcepts": [
+      { "conceptId": "switch", "type": "related" },
+      { "conceptId": "broadcast", "type": "related", "label": "évite la tempête de" }
+    ],
+    "failureSymptoms": ["Réseau entier saturé, LED de switches clignotant en continu : boucle.", "Port qui reste inactif quelques dizaines de secondes après connexion."],
+    "sources": [{ "title": "IEEE 802.1D / 802.1Q — Spanning Tree", "url": "https://standards.ieee.org/ieee/802.1Q/10323/", "kind": "ieee" }]
+  },
+  {
+    "id": "lldp",
+    "name": "LLDP",
+    "aliases": ["Link Layer Discovery Protocol", "802.1AB"],
+    "shortDefinition": "Protocole de découverte des voisins directs : chaque équipement annonce qui il est et sur quel port.",
+    "whyItExists": "Savoir quel AP est branché sur quel port de quel switch, sans documentation manuelle.",
+    "whoTalksToWhom": "Équipement → voisin direct (multicast couche 2, non relayé).",
+    "when": "Périodiquement.",
+    "explanation": "Une plateforme cloud utilise LLDP pour dessiner la topologie AP ↔ switch et pour aider au troubleshooting (« cet AP est sur le port 12 du switch du 2e étage »). LLDP-MED transporte aussi des infos PoE et VLAN voix.",
+    "category": "switching",
+    "difficulty": 2,
+    "osiLayers": [2],
+    "prerequisites": ["switch"],
+    "relatedConcepts": [
+      { "conceptId": "switch", "type": "related" },
+      { "conceptId": "access-point", "type": "related", "label": "localise les" },
+      { "conceptId": "telemetry", "type": "related", "label": "topologie" }
+    ],
+    "sources": [{ "title": "IEEE 802.1AB — LLDP", "url": "https://standards.ieee.org/ieee/802.1AB/6047/", "kind": "ieee" }]
+  },
+  {
+    "id": "poe",
+    "name": "PoE",
+    "aliases": ["Power over Ethernet", "802.3af", "802.3at", "802.3bt", "PoE+"],
+    "shortDefinition": "Alimentation électrique d’un AP (ou d’une caméra, d’un téléphone IP) par le câble Ethernet lui-même.",
+    "whyItExists": "Installer un AP au plafond sans prise électrique.",
+    "whoTalksToWhom": "Switch PoE (PSE) → AP (PD), après négociation de la puissance.",
+    "when": "Au branchement.",
+    "explanation": "Classes de puissance : 802.3af (~15 W), 802.3at/PoE+ (~30 W), 802.3bt (~60–90 W). Un AP Wi-Fi 6/6E gourmand sur un port 802.3af peut démarrer en mode dégradé (une radio désactivée) ou redémarrer en boucle. Le budget PoE total du switch est aussi limité.",
+    "category": "switching",
+    "difficulty": 1,
+    "osiLayers": [1],
+    "prerequisites": ["ethernet"],
+    "relatedConcepts": [
+      { "conceptId": "access-point", "type": "controls", "label": "alimente" },
+      { "conceptId": "switch", "type": "related", "label": "fourni par" }
+    ],
+    "failureSymptoms": ["AP qui redémarre en boucle ou dont la radio 5 GHz reste éteinte : budget PoE insuffisant."],
+    "sources": [{ "title": "IEEE 802.3bt — PoE", "url": "https://standards.ieee.org/ieee/802.3bt/6749/", "kind": "ieee" }]
+  },
+  {
+    "id": "lacp",
+    "name": "LACP",
+    "aliases": ["Link Aggregation", "802.1AX", "port-channel", "bond"],
+    "shortDefinition": "Agrégation de plusieurs liens Ethernet en un seul lien logique pour la redondance et la bande passante.",
+    "whyItExists": "Un uplink de switch qui tombe ne doit pas isoler un étage ; deux câbles valent mieux qu’un.",
+    "whoTalksToWhom": "Switch ↔ switch ou switch ↔ serveur.",
+    "when": "Configuration des uplinks.",
+    "explanation": "Les deux côtés doivent être configurés de façon cohérente. Concept secondaire pour ce cours : à reconnaître, pas à configurer.",
+    "category": "switching",
+    "difficulty": 2,
+    "osiLayers": [2],
+    "prerequisites": ["switch"],
+    "relatedConcepts": [{ "conceptId": "switch", "type": "related" }],
+    "sources": [{ "title": "IEEE 802.1AX — Link Aggregation", "url": "https://standards.ieee.org/ieee/802.1AX/6768/", "kind": "ieee" }]
+  }
+]

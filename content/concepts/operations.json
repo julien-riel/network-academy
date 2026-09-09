@@ -1,0 +1,169 @@
+[
+  {
+    "id": "telemetry",
+    "name": "Télémétrie",
+    "aliases": ["telemetry", "state", "metrics push"],
+    "shortDefinition": "Flux continu d’état et de métriques envoyé par les devices au contrôleur (clients associés, RSSI, utilisation des canaux, trafic, santé).",
+    "whyItExists": "Le contrôleur ne voit pas le trafic ; il doit être informé pour afficher, alerter et optimiser (RRM).",
+    "whoTalksToWhom": "AP / switch → Gateway (uCentral state), puis Analytics.",
+    "when": "Périodiquement (ex. toutes les 60 s) et sur événement.",
+    "explanation": "Sans télémétrie, pas de dashboard, pas de RRM, pas d’alarmes. Si un AP est hors ligne côté control plane, sa télémétrie s’arrête — même si ses clients fonctionnent.",
+    "softwareAnalogy": "Un agent Prometheus/OpenTelemetry sur chaque nœud.",
+    "category": "operations",
+    "difficulty": 1,
+    "prerequisites": ["ucentral"],
+    "relatedConcepts": [
+      { "conceptId": "metrics", "type": "encapsulates" },
+      { "conceptId": "events", "type": "encapsulates" },
+      { "conceptId": "ucentral", "type": "runs-over" },
+      { "conceptId": "analytics", "type": "related", "label": "consommée par" },
+      { "conceptId": "rrm", "type": "related", "label": "alimente le" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "metrics",
+    "name": "Métriques",
+    "aliases": ["metrics", "KPI", "channel utilization", "retry", "packet loss", "latency"],
+    "shortDefinition": "Valeurs numériques observées : RSSI/SNR par client, utilisation du canal, taux de retransmission, pertes, latence, débit, nombre de clients par radio.",
+    "whyItExists": "Quantifier « le Wi-Fi est lent ».",
+    "explanation": "Métriques à connaître : **RSSI/SNR** (qualité du lien), **channel utilization** (% du temps où le canal est occupé : > 60–70 % = saturé), **retries** (retransmissions 802.11 : interférence ou lien faible), **packet loss** et **latency** (ressenti applicatif), clients par radio (charge).",
+    "category": "operations",
+    "difficulty": 2,
+    "prerequisites": ["telemetry"],
+    "relatedConcepts": [
+      { "conceptId": "rssi", "type": "related" },
+      { "conceptId": "channel-utilization", "type": "related" },
+      { "conceptId": "telemetry", "type": "belongs-to-layer" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "channel-utilization",
+    "name": "Channel utilization",
+    "aliases": ["utilisation du canal", "airtime", "temps d’antenne"],
+    "shortDefinition": "Pourcentage du temps pendant lequel un canal radio est occupé (par ses propres clients, d’autres réseaux ou du bruit).",
+    "whyItExists": "Le Wi-Fi est un médium partagé : la capacité restante d’un canal, c’est le temps d’antenne libre.",
+    "explanation": "Un AP avec peu de clients mais 80 % d’utilisation du canal subit ses voisins. Symptôme : bon RSSI, mauvaise expérience. Solution : changer de canal (RRM), réduire la largeur, ajouter des AP à puissance réduite.",
+    "category": "operations",
+    "difficulty": 2,
+    "prerequisites": ["channel"],
+    "relatedConcepts": [
+      { "conceptId": "channel", "type": "related" },
+      { "conceptId": "interference", "type": "related" },
+      { "conceptId": "metrics", "type": "belongs-to-layer" }
+    ],
+    "failureSymptoms": ["Débit faible malgré un bon signal."],
+    "sources": []
+  },
+  {
+    "id": "events",
+    "name": "Événements et alarmes",
+    "aliases": ["events", "alarms", "alertes"],
+    "shortDefinition": "Faits discrets remontés par les devices (client associé / déconnecté, échec d’auth, changement de canal DFS, reboot) et alarmes dérivées (AP hors ligne, RADIUS injoignable).",
+    "whyItExists": "Corréler ce qui s’est passé, quand, et sur quel équipement — surtout pour un problème intermittent.",
+    "explanation": "Le journal d’événements d’un client (« associated → 802.1X failed: RADIUS timeout ») localise le problème dans la chaîne de connexion mieux que n’importe quelle métrique. NetExperience expose événements, métriques et historique pour le remote troubleshooting.",
+    "category": "operations",
+    "difficulty": 1,
+    "prerequisites": ["telemetry"],
+    "relatedConcepts": [
+      { "conceptId": "logs", "type": "related" },
+      { "conceptId": "telemetry", "type": "belongs-to-layer" },
+      { "conceptId": "ntp", "type": "depends-on", "label": "horodatage" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "logs",
+    "name": "Logs",
+    "aliases": ["journaux", "syslog", "remote login"],
+    "shortDefinition": "Traces textuelles détaillées produites par les composants de l’AP (hostapd, DHCP client, uCentral) ; consultables à distance ou via remote login.",
+    "whyItExists": "Quand métriques et événements ne suffisent pas, il faut le détail au niveau du processus.",
+    "explanation": "Exemple hostapd : `STA aa:bb:cc… IEEE 802.1X: authentication failed` ou `RADIUS: No response from server`. Les logs supposent une horloge correcte (NTP) pour être corrélés.",
+    "category": "operations",
+    "difficulty": 2,
+    "prerequisites": ["events"],
+    "relatedConcepts": [
+      { "conceptId": "events", "type": "related" },
+      { "conceptId": "ap-nos", "type": "related", "label": "produits par l’" },
+      { "conceptId": "ntp", "type": "depends-on" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "pcap",
+    "name": "Packet capture (PCAP)",
+    "aliases": ["PCAP", "capture de paquets", "Wireshark", "remote packet capture"],
+    "shortDefinition": "Enregistrement des trames/paquets qui passent par une interface de l’AP (radio ou Ethernet), analysable dans Wireshark.",
+    "whyItExists": "La vérité ultime : voir exactement quels messages ont circulé (ou pas) — le Discover DHCP est-il parti ? Le RADIUS a-t-il répondu ?",
+    "whoTalksToWhom": "Contrôleur → AP (commande de capture via uCentral) → fichier PCAP remonté au cloud.",
+    "when": "En dernier recours ou pour un problème reproductible.",
+    "explanation": "Une capture sur l’interface Ethernet de l’AP montre les Access-Request RADIUS partir et (ne pas) revenir, ou les DHCP Discover sans Offer. Une capture radio montre association et handshake. OpenWiFi supporte la capture distante ; NetExperience la liste parmi ses outils de diagnostic.",
+    "softwareAnalogy": "Le tcpdump du réseau physique, déclenché à distance.",
+    "category": "operations",
+    "difficulty": 2,
+    "prerequisites": ["frame"],
+    "relatedConcepts": [
+      { "conceptId": "ucentral", "type": "uses", "label": "déclenchée via" },
+      { "conceptId": "frame", "type": "related" },
+      { "conceptId": "troubleshooting", "type": "related", "label": "outil de" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "troubleshooting",
+    "name": "Méthode de troubleshooting",
+    "aliases": ["diagnostic", "où chercher", "chaîne de connexion"],
+    "shortDefinition": "Localiser un problème en suivant la chaîne de connexion dans l’ordre : SSID visible → association → authentification → VLAN/DHCP → gateway/ARP → DNS → Internet ; et séparer control plane de data plane.",
+    "whyItExists": "« Le Wi-Fi ne marche pas » décrit dix pannes différentes. La chaîne dit où regarder en premier.",
+    "explanation": "Réflexe attendu : « association OK, RADIUS Access-Accept OK, mais le client n’a pas d’adresse IP » → 802.11 ✓ → authentification ✓ → **probablement VLAN/DHCP** → regarder le data plane.\n\nQuestions dans l’ordre :\n- Le SSID est-il visible ? (radio, config AP)\n- L’association réussit-elle ? (802.11)\n- L’authentification réussit-elle ? (PSK / 802.1X / RADIUS)\n- Une IP est-elle obtenue ? (VLAN, DHCP) — 169.254.x.x = non\n- La gateway répond-elle ? (ARP, routage)\n- Les noms se résolvent-ils ? (DNS)\n- Y a-t-il un captive portal en attente ?\n- L’AP est-il vu par le cloud ? (control plane, indépendant du reste)",
+    "category": "operations",
+    "difficulty": 1,
+    "prerequisites": ["association", "dhcp", "dns"],
+    "relatedConcepts": [
+      { "conceptId": "association", "type": "uses" },
+      { "conceptId": "8021x", "type": "uses" },
+      { "conceptId": "dhcp", "type": "uses" },
+      { "conceptId": "dns", "type": "uses" },
+      { "conceptId": "control-plane", "type": "uses" },
+      { "conceptId": "events", "type": "uses" },
+      { "conceptId": "pcap", "type": "uses" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "analytics",
+    "name": "Analytics",
+    "aliases": ["OWANALYTICS", "tableaux de bord", "historique"],
+    "shortDefinition": "Agrégation et historisation des métriques et événements par site/venue pour visualiser la santé du réseau et son évolution.",
+    "whyItExists": "Répondre à « est-ce que c’était déjà comme ça hier ? » et détecter les tendances (un canal qui se sature, un AP qui perd des clients).",
+    "explanation": "OWANALYTICS agrège la télémétrie issue du Gateway. NetExperience expose analytics et historique dans sa plateforme.",
+    "category": "operations",
+    "difficulty": 1,
+    "prerequisites": ["telemetry"],
+    "relatedConcepts": [
+      { "conceptId": "telemetry", "type": "uses" },
+      { "conceptId": "cloud-sdk", "type": "belongs-to-layer", "label": "OWANALYTICS" },
+      { "conceptId": "metrics", "type": "uses" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "qos",
+    "name": "QoS",
+    "aliases": ["Quality of Service", "DSCP", "WMM", "rate limiting", "priorité"],
+    "shortDefinition": "Mécanismes pour traiter différemment les trafics quand la capacité manque : priorité (DSCP, WMM), files d’attente, limitation de débit par client ou par SSID.",
+    "whyItExists": "S’il n’y a plus assez de capacité, VoIP, Zoom, Netflix et un backup cloud ne devraient pas être traités exactement de la même manière.",
+    "explanation": "- **DSCP** : marquage de priorité dans l’en-tête IP.\n- **WMM** : quatre files d’accès Wi-Fi (voice, video, best effort, background) dérivées du DSCP.\n- **Rate limiting** : plafond de débit par client ou par SSID (Guest à 10 Mbit/s).\n- **Application-aware policy** : reconnaître le type de trafic pour appliquer une politique.",
+    "category": "operations",
+    "difficulty": 2,
+    "osiLayers": [2, 3],
+    "prerequisites": ["ip", "wifi"],
+    "relatedConcepts": [
+      { "conceptId": "ssid", "type": "related", "label": "politique par" },
+      { "conceptId": "radius", "type": "related", "label": "débit attribué par" },
+      { "conceptId": "channel-utilization", "type": "related" }
+    ],
+    "sources": []
+  }
+]

@@ -1,0 +1,151 @@
+{
+  "id": "wifi",
+  "order": 5,
+  "title": "Wi-Fi : fondamentaux",
+  "subtitle": "Wi-Fi n’est pas Internet. SSID, BSSID, association, bandes, roaming, RRM.",
+  "domain": "wifi",
+  "concepts": ["wifi", "wifi-standards", "access-point", "radio", "station", "ssid", "bssid", "beacon", "association", "band", "channel", "rssi", "roaming", "80211kvr", "band-steering", "client-steering", "rrm", "dfs", "interference"],
+  "prerequisites": ["ethernet"],
+  "quiz": ["q-wifi-01", "q-wifi-02", "q-wifi-03", "q-wifi-04", "q-wifi-05", "q-wifi-06", "q-wifi-07", "q-wifi-08", "q-wifi-09", "q-wifi-10", "q-wifi-11", "q-wifi-12"],
+  "lessons": [
+    {
+      "id": "wifi-1",
+      "title": "Wi-Fi n’est pas Internet",
+      "minutes": 6,
+      "blocks": [
+        {
+          "type": "callout",
+          "kind": "idea",
+          "title": "Casser une intuition",
+          "text": "**Wi-Fi n’est pas Internet.** Wi-Fi remplace essentiellement le lien Ethernet physique entre le client et le réseau. Les deux vivent principalement aux couches 1 et 2."
+        },
+        {
+          "type": "diagram",
+          "text": "Ethernet :   Laptop ─── câble ─── Switch ─── Routeur ─── Internet\nWi-Fi    :   Laptop  ))))  AP  ─── Switch ─── Routeur ─── Internet\n                            └── l’AP est un pont couche 2 : radio ↔ Ethernet"
+        },
+        {
+          "type": "paragraph",
+          "text": "Conséquence directe : un client peut avoir « du Wi-Fi » (associé, bon signal, cadenas affiché) et « pas d’Internet » (DHCP, DNS, gateway, captive portal…). Quand quelqu’un dit « le Wi-Fi ne marche pas », la première question est : **à quelle étape ?**"
+        },
+        { "type": "concepts", "ids": ["wifi", "access-point", "station"] },
+        {
+          "type": "table",
+          "headers": ["Génération", "IEEE", "Bandes", "À retenir"],
+          "rows": [
+            ["Legacy", "802.11a/b/g", "2.4 / 5 GHz", "historique"],
+            ["Wi-Fi 4", "802.11n", "2.4 / 5", "MIMO"],
+            ["Wi-Fi 5", "802.11ac", "5 GHz", "débit accru"],
+            ["Wi-Fi 6", "802.11ax", "2.4 / 5", "efficacité, OFDMA"],
+            ["Wi-Fi 6E", "802.11ax", "+ 6 GHz", "accès au spectre 6 GHz"],
+            ["Wi-Fi 7", "802.11be", "2.4 / 5 / 6", "très haut débit, MLO, canaux plus larges"]
+          ]
+        },
+        { "type": "concepts", "ids": ["wifi-standards"] },
+        { "type": "exercise", "questionIds": ["q-wifi-01", "q-wifi-02"] }
+      ]
+    },
+    {
+      "id": "wifi-2",
+      "title": "Radio, bandes, canaux, signal",
+      "minutes": 7,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Compréhension à haut niveau seulement. Un AP possède une ou plusieurs **radios** (2.4, 5, 6 GHz). Chaque radio émet sur un **canal** d’une certaine **largeur**, à une certaine **puissance**. Le Wi-Fi est un médium partagé : sur un canal, un seul émetteur parle à la fois."
+        },
+        {
+          "type": "table",
+          "headers": ["Bande", "Portée", "Spectre", "Remarques"],
+          "rows": [
+            ["2.4 GHz", "meilleure", "3 canaux non chevauchants", "davantage congestionné (micro-ondes, Bluetooth, voisins)"],
+            ["5 GHz", "moindre", "beaucoup de canaux", "bonnes performances ; canaux DFS partagés avec les radars"],
+            ["6 GHz", "moindre", "énorme", "Wi-Fi 6E/7 et WPA3 requis"]
+          ]
+        },
+        {
+          "type": "diagram",
+          "title": "RSSI, bruit, SNR",
+          "text": "Puissance (dBm)\n  -30 ┤\n  -55 ┤ ■ RSSI excellent\n  -65 ┤ ■ RSSI bon             ┐\n  -75 ┤ ■ RSSI limite          │ SNR = RSSI − noise floor\n  -85 ┤ ■ RSSI mauvais         │ (≥ 25 dB : débits élevés)\n  -95 ┤ ░ noise floor          ┘\n\nBon RSSI + mauvais SNR = environnement bruyant (interférence).\nBon RSSI + canal saturé (utilisation > 70 %) = débit faible malgré le signal."
+        },
+        { "type": "concepts", "ids": ["band", "channel", "rssi"] },
+        { "type": "concepts", "ids": ["interference", "dfs"] },
+        { "type": "exercise", "questionIds": ["q-wifi-03", "q-wifi-04"] }
+      ]
+    },
+    {
+      "id": "wifi-3",
+      "title": "SSID, BSSID, association",
+      "minutes": 7,
+      "blocks": [
+        {
+          "type": "diagram",
+          "title": "Un SSID, plusieurs BSSID",
+          "text": "             SSID: Corporate\n        ┌──── AP1 / BSSID A  (radio 5 GHz, canal 36)\nPhone ──┤\n        ├──── AP2 / BSSID B  (radio 5 GHz, canal 44)\n        │\n        └──── AP3 / BSSID C  (radio 2.4 GHz, canal 6)\n\nLe SSID peut être commun à plusieurs AP.\nChaque radio/BSS possède néanmoins son identité (BSSID = une MAC)."
+        },
+        { "type": "concepts", "ids": ["ssid", "bssid", "beacon"] },
+        {
+          "type": "sequence",
+          "title": "Scan → association 802.11",
+          "actors": ["Station", "AP"],
+          "steps": [
+            { "from": "AP", "to": "Station", "label": "Beacon (SSID, sécurité, capacités)", "note": "L’AP annonce le réseau ~10 fois par seconde." },
+            { "from": "Station", "to": "AP", "label": "Probe Request", "note": "« Qui diffuse Corporate ? »" },
+            { "from": "AP", "to": "Station", "label": "Probe Response" },
+            { "from": "Station", "to": "AP", "label": "Authentication (open)", "note": "Formalité 802.11 — pas encore la vraie sécurité." },
+            { "from": "AP", "to": "Station", "label": "Authentication OK" },
+            { "from": "Station", "to": "AP", "label": "Association Request" },
+            { "from": "AP", "to": "Station", "label": "Association Response", "note": "Le client est associé : couche 2 établie. Vient ensuite WPA (PSK/SAE) ou 802.1X, puis DHCP." }
+          ]
+        },
+        { "type": "concepts", "ids": ["association"] },
+        {
+          "type": "callout",
+          "kind": "warning",
+          "text": "« Le téléphone voit le SSID mais ne peut pas s’y connecter » : le problème est **avant DHCP**. Le client n’a même pas encore obtenu l’accès couche 2 (association) ou échoue à l’authentification qui suit."
+        },
+        { "type": "exercise", "questionIds": ["q-wifi-05", "q-wifi-06"] }
+      ]
+    },
+    {
+      "id": "wifi-4",
+      "title": "Roaming, steering, RRM",
+      "minutes": 7,
+      "blocks": [
+        {
+          "type": "callout",
+          "kind": "remember",
+          "text": "**Le client conserve une grande partie du contrôle de la décision de roaming.** Le réseau peut l’aider ou l’influencer, pas décider à sa place."
+        },
+        {
+          "type": "table",
+          "headers": ["Mécanisme", "Rôle", "Qui décide"],
+          "rows": [
+            ["Roaming", "Changer d’AP (BSSID) quand le signal baisse", "Le client"],
+            ["802.11k", "L’AP fournit la liste des voisins", "Aide le client"],
+            ["802.11v", "L’AP suggère une transition vers un autre AP", "Influence le client"],
+            ["802.11r", "Fast transition : réutiliser les clés, éviter un 802.1X complet", "Accélère"],
+            ["Band steering", "Pousser un client vers 5/6 GHz", "L’AP influence"],
+            ["Client steering", "Équilibrer la charge entre AP", "L’AP influence"],
+            ["RRM", "Choisir canal, puissance, taille de cellule pour tout le parc", "Le contrôleur / l’AP"]
+          ]
+        },
+        { "type": "concepts", "ids": ["roaming", "80211kvr", "rrm"] },
+        {
+          "type": "diagram",
+          "title": "Le problème que RRM résout",
+          "text": "Avec 100 AP :\n  Quel canal pour chacun ?           → auto-channel\n  Quelle puissance ?                 → auto-cell-size / transmit power\n  Quels voisins ?                    → neighbor reports\n  Quel client devrait être associé où ? → client steering\n\nRRM = observer (télémétrie) → décider → reconfigurer (via le control plane)."
+        },
+        { "type": "concepts", "ids": ["band-steering", "client-steering"] },
+        { "type": "exercise", "questionIds": ["q-wifi-07", "q-wifi-08"] },
+        {
+          "type": "takeaways",
+          "items": [
+            "SSID = nom logique partagé ; BSSID = identité d’une radio précise.",
+            "Association = couche 2 établie ; la sécurité (WPA/802.1X) vient juste après ; DHCP encore après.",
+            "Roaming : le client décide ; k/v/r et le steering l’aident. RRM règle canal et puissance du parc."
+          ]
+        }
+      ]
+    }
+  ]
+}

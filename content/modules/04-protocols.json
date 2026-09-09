@@ -1,0 +1,92 @@
+{
+  "id": "protocols",
+  "order": 4,
+  "title": "DHCP, ARP, DNS (et NTP, ICMP)",
+  "subtitle": "Les protocoles qui transforment un lien de couche 2 en accès Internet utilisable.",
+  "domain": "fundamentals",
+  "concepts": ["dhcp", "arp", "dns", "ntp", "icmp", "broadcast"],
+  "prerequisites": ["ip", "ethernet"],
+  "quiz": ["q-dhcp-01", "q-dhcp-02", "q-dhcp-03", "q-arp-01", "q-arp-02", "q-dns-01", "q-dns-02", "q-net-10", "q-ntp-01", "q-net-13"],
+  "lessons": [
+    {
+      "id": "proto-1",
+      "title": "DHCP : DORA",
+      "minutes": 7,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Une fois admis sur le réseau local (association et authentification Wi-Fi réussies), le client n’a **rien** : ni adresse, ni gateway, ni DNS. DHCP lui donne tout ça en quatre messages."
+        },
+        {
+          "type": "sequence",
+          "title": "DHCP — Discover, Offer, Request, Ack",
+          "actors": ["Client", "AP / Switch", "Serveur DHCP"],
+          "steps": [
+            { "from": "Client", "to": "Serveur DHCP", "label": "Discover (broadcast)", "note": "« Y a-t-il un serveur DHCP ? » Envoyé en broadcast : il ne sort pas du VLAN." },
+            { "from": "Serveur DHCP", "to": "Client", "label": "Offer", "note": "« Voici 192.168.20.37, masque /24, gateway .1, DNS .1 »" },
+            { "from": "Client", "to": "Serveur DHCP", "label": "Request", "note": "« Je prends celle-là. »" },
+            { "from": "Serveur DHCP", "to": "Client", "label": "Ack", "note": "Bail confirmé pour N heures." }
+          ]
+        },
+        { "type": "concepts", "ids": ["dhcp", "broadcast"] },
+        {
+          "type": "callout",
+          "kind": "warning",
+          "title": "DHCP dépend du VLAN",
+          "text": "Le Discover est un broadcast de couche 2 : il ne traverse pas les routeurs et reste dans le VLAN où l’AP a placé le client. Mauvais VLAN → mauvais serveur DHCP (IP du mauvais réseau) ou aucun serveur (le client s’auto-attribue 169.254.x.x). Un **relais DHCP** sur le routeur permet un serveur central pour plusieurs VLAN."
+        },
+        { "type": "exercise", "questionIds": ["q-dhcp-01", "q-dhcp-02"] }
+      ]
+    },
+    {
+      "id": "proto-2",
+      "title": "ARP, DNS, NTP, ICMP",
+      "minutes": 8,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "**ARP** répond à « quelle MAC pour cette IP ? ». Avant d’envoyer son premier paquet à la gateway, le client crie sur le VLAN ; la gateway répond ; la correspondance est mise en cache. En IPv6, Neighbor Discovery joue ce rôle."
+        },
+        {
+          "type": "sequence",
+          "title": "ARP",
+          "actors": ["Client", "Tout le VLAN", "Gateway"],
+          "steps": [
+            { "from": "Client", "to": "Tout le VLAN", "label": "Who has 192.168.20.1 ? (broadcast)", "note": "Tous les hôtes du VLAN reçoivent la question." },
+            { "from": "Gateway", "to": "Client", "label": "192.168.20.1 is at AA:BB:CC:…", "note": "Seule la gateway répond, en unicast." }
+          ]
+        },
+        { "type": "concepts", "ids": ["arp"] },
+        {
+          "type": "paragraph",
+          "text": "**DNS** traduit google.com en 142.x.x.x. Le résolveur utilisé est celui que DHCP a fourni. Un captive portal intercepte souvent DNS ou HTTP pour rediriger vers le portail."
+        },
+        {
+          "type": "sequence",
+          "title": "DNS",
+          "actors": ["Client", "Résolveur DNS"],
+          "steps": [
+            { "from": "Client", "to": "Résolveur DNS", "label": "A google.com ? (UDP 53)" },
+            { "from": "Résolveur DNS", "to": "Client", "label": "142.250.65.78" }
+          ]
+        },
+        { "type": "concepts", "ids": ["dns", "ntp", "icmp"] },
+        {
+          "type": "callout",
+          "kind": "idea",
+          "title": "NTP, la dépendance cachée",
+          "text": "Les certificats ont des dates. Un AP qui démarre en 1970 refuse un certificat RADIUS valide ou ne peut pas ouvrir sa connexion TLS vers le cloud. Les logs et événements ne se corrèlent pas. NTP est important pour : certificats, logs, événements, debugging."
+        },
+        { "type": "exercise", "questionIds": ["q-arp-01", "q-dns-01", "q-net-10"] },
+        {
+          "type": "takeaways",
+          "items": [
+            "Ordre : association → authentification → **DHCP** → **ARP** (gateway) → **DNS** → TCP → TLS → HTTP.",
+            "169.254.x.x = pas de DHCP. « ping IP OK, nom KO » = DNS.",
+            "ARP est un broadcast : il vit dans le VLAN."
+          ]
+        }
+      ]
+    }
+  ]
+}

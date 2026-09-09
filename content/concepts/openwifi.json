@@ -1,0 +1,334 @@
+[
+  {
+    "id": "openwifi",
+    "name": "OpenWiFi",
+    "aliases": ["TIP OpenWiFi", "Telecom Infra Project", "TIP", "disaggregated Wi-Fi"],
+    "shortDefinition": "Pile Wi-Fi ouverte et désagrégée du Telecom Infra Project : un AP NOS open source + un contrôleur cloud-native + un protocole de contrôle standard (uCentral), indépendants du fabricant.",
+    "whyItExists": "Historiquement, matériel, logiciel de l’AP et contrôleur venaient du même fournisseur (lock-in). OpenWiFi sépare les couches pour que le matériel et la plateforme de gestion puissent provenir de fournisseurs différents.",
+    "whoTalksToWhom": "AP (OpenWiFi NOS + client uCentral) ↔ Cloud SDK (Gateway, Provisioning, Security, Firmware, Analytics) ↔ plateforme de gestion (ex. NetExperience).",
+    "when": "Architecture ; en permanence.",
+    "explanation": "Idée fondamentale : OpenWiFi sépare\n\n```\nHARDWARE  +  OPEN AP NOS  +  STANDARDIZED CONTROL  +  CLOUD CONTROLLER\n```\n\nTIP décrit OpenWiFi comme une pile Wi-Fi ouverte et désagrégée avec contrôleur cloud-native et AP NOS open source. NetExperience se positionne comme plateforme SaaS de gestion de réseaux OpenWiFi/OpenLAN indépendante du fabricant.\n\n« Disaggregated » = on peut acheter des AP de deux fabricants et les gérer depuis une seule plateforme, parce qu’ils exécutent le même NOS et parlent le même protocole.",
+    "softwareAnalogy": "Comme Kubernetes pour les serveurs : un OS/agent standard sur des machines hétérogènes, un control plane commun, et des distributions commerciales (NetExperience = une distribution managée).",
+    "category": "openwifi",
+    "difficulty": 1,
+    "prerequisites": ["access-point"],
+    "relatedConcepts": [
+      { "conceptId": "ap-nos", "type": "uses" },
+      { "conceptId": "ucentral", "type": "uses", "label": "contrôle standardisé =" },
+      { "conceptId": "cloud-sdk", "type": "uses" },
+      { "conceptId": "cloud-controller", "type": "uses" },
+      { "conceptId": "openlan", "type": "related", "label": "équivalent switching" },
+      { "conceptId": "control-plane", "type": "related" }
+    ],
+    "sources": [
+      { "title": "TIP OpenWiFi", "url": "https://openwifi.tip.build/", "kind": "project" },
+      { "title": "Telecom Infra Project — OpenWiFi GitHub", "url": "https://github.com/Telecominfraproject/wlan-cloud-ucentralgw", "kind": "project" }
+    ]
+  },
+  {
+    "id": "ap-nos",
+    "name": "AP NOS (OpenWiFi)",
+    "aliases": ["Network Operating System", "OpenWrt", "hostapd", "firmware AP"],
+    "shortDefinition": "Le système d’exploitation de l’AP : Linux/OpenWrt, drivers Wi-Fi, hostapd (SSID, association, authentification) et les services OpenWiFi dont le client uCentral.",
+    "whyItExists": "Un logiciel d’AP commun à plusieurs fabricants permet un comportement et une API uniformes.",
+    "explanation": "```\nAccess Point\n├── Linux / OpenWrt\n├── Wi-Fi drivers\n├── hostapd\n├── OpenWiFi services\n└── uCentral client\n```\n\nNe pas apprendre les composants Linux en détail. L’idée importante : l’AP contient un logiciel local capable de gérer la radio, les clients et le forwarding, tout en recevant sa configuration du cloud. Le data plane est **local à l’AP** ; c’est ce qui lui permet de continuer à servir les clients si le cloud est injoignable.",
+    "category": "openwifi",
+    "difficulty": 2,
+    "prerequisites": ["openwifi"],
+    "relatedConcepts": [
+      { "conceptId": "access-point", "type": "related", "label": "s’exécute sur l’" },
+      { "conceptId": "ucentral", "type": "uses", "label": "inclut le client" },
+      { "conceptId": "firmware", "type": "related", "label": "livré en" },
+      { "conceptId": "data-plane", "type": "controls" }
+    ],
+    "sources": [{ "title": "TIP wlan-ap (OpenWiFi AP NOS)", "url": "https://github.com/Telecominfraproject/wlan-ap", "kind": "project" }]
+  },
+  {
+    "id": "ucentral",
+    "name": "uCentral",
+    "aliases": ["uCentral protocol", "uCentral client", "uCentral schema", "JSON-RPC over WebSocket"],
+    "shortDefinition": "Protocole de contrôle entre le device (AP ou switch) et le cloud : une connexion WebSocket persistante sur laquelle transitent des messages JSON-RPC (configuration, état, commandes, télémétrie).",
+    "whyItExists": "Il faut un canal standard, bidirectionnel, sécurisé (TLS + certificat device) et traversant les NAT pour piloter des milliers de devices depuis le cloud.",
+    "whoTalksToWhom": "Device (client uCentral) → Gateway (OWGW). Le device initie toujours la connexion (sortante, donc compatible NAT/pare-feu) ; ensuite les deux sens sont possibles.",
+    "when": "Dès que l’AP a une IP et a découvert son Gateway (provisioning) ; connexion maintenue en permanence.",
+    "explanation": "```\nAP\n│  WebSocket (TLS, port 15002)\n│  JSON-RPC\n▼\nuCentral Gateway\n├── Configuration  (cloud → device)\n├── State          (device → cloud)\n├── Commands       (reboot, upgrade, capture…)\n└── Telemetry      (métriques, événements)\n```\n\nLe schéma uCentral utilise des **JSON Schemas** pour représenter et valider la configuration et l’état des devices : la config d’un AP (SSID, radios, VLAN, RADIUS…) est un document JSON validé, versionné et poussé par le cloud.",
+    "softwareAnalogy": "Penser « API bidirectionnelle persistante entre IoT device et control plane » : un WebSocket + JSON-RPC, avec une config déclarative validée par JSON Schema. Très proche d’un agent Kubernetes ou d’un device shadow IoT.",
+    "category": "openwifi",
+    "difficulty": 2,
+    "osiLayers": [7],
+    "prerequisites": ["openwifi", "tcp"],
+    "actors": ["Device (AP / switch)", "OWGW (uCentral Gateway)"],
+    "ports": [{ "protocol": "TCP", "port": 15002, "role": "WebSocket TLS device ↔ gateway (défaut)" }],
+    "packetFlow": [
+      { "from": "Device", "to": "OWGW", "label": "WebSocket connect (TLS, cert device)", "note": "Le device initie ; le Gateway vérifie le certificat." },
+      { "from": "Device", "to": "OWGW", "label": "connect { serial, firmware, capabilities }", "note": "Premier message JSON-RPC : identité et capacités." },
+      { "from": "OWGW", "to": "Device", "label": "configure { uuid, config }", "note": "Le cloud pousse la configuration désirée (JSON validé par schéma)." },
+      { "from": "Device", "to": "OWGW", "label": "state { radios, clients, interfaces }", "note": "Périodiquement : état et métriques." },
+      { "from": "OWGW", "to": "Device", "label": "reboot / upgrade / packet capture", "note": "Commandes à la demande." },
+      { "from": "Device", "to": "OWGW", "label": "event / healthcheck", "note": "Événements et santé." }
+    ],
+    "relatedConcepts": [
+      { "conceptId": "owgw", "type": "related", "label": "terminé par" },
+      { "conceptId": "access-point", "type": "controls" },
+      { "conceptId": "device-certificate", "type": "authenticates-with" },
+      { "conceptId": "control-plane", "type": "belongs-to-layer", "label": "constitue le" },
+      { "conceptId": "telemetry", "type": "encapsulates", "label": "transporte la" },
+      { "conceptId": "openlan", "type": "related", "label": "aussi utilisé par" }
+    ],
+    "failureSymptoms": ["AP « disconnected » dans le cloud alors que les clients naviguent : WebSocket coupé (pare-feu sortant, DNS du gateway, certificat, NTP), data plane intact.", "Config refusée : JSON invalide vs schéma."],
+    "goDeeper": "Le client uCentral OpenWiFi communique avec le Gateway par WebSocket et échange des messages en JSON-RPC. Le dépôt wlan-ucentral-schema contient les JSON Schemas de configuration et d’état. Le Gateway expose aussi une API REST OpenAPI pour les applications.",
+    "sources": [
+      { "title": "TIP wlan-ucentral-schema", "url": "https://github.com/Telecominfraproject/wlan-ucentral-schema", "kind": "project" },
+      { "title": "TIP wlan-cloud-ucentralgw (OWGW)", "url": "https://github.com/Telecominfraproject/wlan-cloud-ucentralgw", "kind": "project" }
+    ]
+  },
+  {
+    "id": "owgw",
+    "name": "OWGW — Gateway",
+    "aliases": ["uCentral Gateway", "OpenWiFi Gateway", "wlan-cloud-ucentralgw"],
+    "shortDefinition": "Micro-service du Cloud SDK qui termine les connexions uCentral des devices, pousse les configurations, reçoit l’état et expose une API REST.",
+    "whyItExists": "Il faut un point d’entrée unique et scalable pour toutes les connexions device, séparé de la logique métier.",
+    "whoTalksToWhom": "Devices ↔ OWGW (WebSocket) ; applications / autres micro-services ↔ OWGW (REST, OpenAPI) ; OWGW ↔ Kafka (événements).",
+    "when": "En permanence.",
+    "explanation": "Le Gateway gère les AP utilisant le protocole uCentral et expose également une interface OpenAPI. Il ne décide pas de la configuration (c’est Provisioning) ; il la transporte et l’applique.",
+    "softwareAnalogy": "Un « connection broker » / API gateway pour devices, avec un bus d’événements derrière.",
+    "category": "openwifi",
+    "difficulty": 2,
+    "prerequisites": ["ucentral"],
+    "relatedConcepts": [
+      { "conceptId": "ucentral", "type": "uses" },
+      { "conceptId": "cloud-sdk", "type": "belongs-to-layer", "label": "composant du" },
+      { "conceptId": "owprov", "type": "related", "label": "reçoit les configs de" },
+      { "conceptId": "owsec", "type": "authenticates-with", "label": "API sécurisée par" },
+      { "conceptId": "ztp", "type": "related", "label": "découvert via" }
+    ],
+    "sources": [{ "title": "TIP wlan-cloud-ucentralgw", "url": "https://github.com/Telecominfraproject/wlan-cloud-ucentralgw", "kind": "project" }]
+  },
+  {
+    "id": "cloud-sdk",
+    "name": "OpenWiFi Cloud SDK",
+    "aliases": ["OWSEC", "OWFMS", "OWANALYTICS", "OWSUB", "micro-services OpenWiFi"],
+    "shortDefinition": "Ensemble de micro-services open source (Gateway, Security, Firmware, Provisioning, Analytics, Subscriber) qui forment le contrôleur cloud OpenWiFi.",
+    "whyItExists": "Découper le contrôleur en services indépendants, déployables sur Kubernetes, extensibles par API.",
+    "whoTalksToWhom": "Services entre eux (REST + Kafka) ; devices → OWGW ; UI / plateformes (NetExperience) → API REST.",
+    "when": "Architecture.",
+    "explanation": "```\n                   ┌──────── Provisioning (OWPROV)\n                   │\nAP → Gateway ──────┼──────── Security (OWSEC)\n   (OWGW)          │\n                   ├──────── Firmware (OWFMS)\n                   │\n                   ├──────── Analytics (OWANALYTICS)\n                   │\n                   └──────── Subscriber (OWSUB)\n```\n\n- **OWGW** — Gateway : connexions uCentral, configs, commandes.\n- **OWSEC** — Security : authentification des utilisateurs/API, tokens, rôles.\n- **OWFMS** — Firmware Management : catalogue de firmwares, mises à jour.\n- **OWPROV** — Provisioning : inventaire, entités (tenant / venue / site), configurations désirées.\n- **OWANALYTICS** — Analytics : agrégation des métriques et de l’état des venues.\n- **OWSUB** — Subscriber : portail/API orientés abonné (résidentiel).",
+    "softwareAnalogy": "Une architecture micro-services classique : API gateway + auth service + inventory service + bus Kafka.",
+    "category": "openwifi",
+    "difficulty": 2,
+    "prerequisites": ["openwifi"],
+    "relatedConcepts": [
+      { "conceptId": "owgw", "type": "uses" },
+      { "conceptId": "owsec", "type": "uses" },
+      { "conceptId": "owprov", "type": "uses" },
+      { "conceptId": "firmware", "type": "uses", "label": "OWFMS gère le" },
+      { "conceptId": "analytics", "type": "uses", "label": "OWANALYTICS" },
+      { "conceptId": "cloud-controller", "type": "related", "label": "base d’un" }
+    ],
+    "sources": [{ "title": "TIP OpenWiFi Cloud SDK repositories", "url": "https://github.com/Telecominfraproject", "kind": "project" }]
+  },
+  {
+    "id": "owsec",
+    "name": "OWSEC — Security",
+    "aliases": ["OpenWiFi Security service"],
+    "shortDefinition": "Micro-service qui authentifie les utilisateurs et les appels API du Cloud SDK (tokens, rôles, mots de passe) — pas les clients Wi-Fi.",
+    "whyItExists": "Un seul service d’identité pour tous les micro-services et l’UI.",
+    "explanation": "À ne pas confondre avec RADIUS : OWSEC protège l’**API du contrôleur** ; RADIUS authentifie les **clients Wi-Fi**. Deux plans, deux identités.",
+    "category": "openwifi",
+    "difficulty": 2,
+    "prerequisites": ["cloud-sdk"],
+    "relatedConcepts": [
+      { "conceptId": "cloud-sdk", "type": "belongs-to-layer" },
+      { "conceptId": "radius", "type": "related", "label": "≠ auth des clients Wi-Fi" }
+    ],
+    "sources": [{ "title": "TIP wlan-cloud-ucentralsec", "url": "https://github.com/Telecominfraproject/wlan-cloud-ucentralsec", "kind": "project" }]
+  },
+  {
+    "id": "owprov",
+    "name": "OWPROV — Provisioning",
+    "aliases": ["OpenWiFi Provisioning service", "inventory", "venue", "entity"],
+    "shortDefinition": "Micro-service qui tient l’inventaire des devices, la hiérarchie tenant / venue / site, et calcule la configuration désirée de chaque device.",
+    "whyItExists": "Séparer « à qui appartient ce device et que doit-il faire » de « comment lui parler » (Gateway).",
+    "explanation": "Quand un AP se connecte, Provisioning sait à quel client, quel site et quel profil de configuration il appartient, et fournit au Gateway la config à pousser. C’est le cœur du zero-touch provisioning côté cloud et de la gestion multi-tenant.",
+    "category": "openwifi",
+    "difficulty": 2,
+    "prerequisites": ["cloud-sdk"],
+    "relatedConcepts": [
+      { "conceptId": "ztp", "type": "controls" },
+      { "conceptId": "tenant", "type": "controls", "label": "modélise" },
+      { "conceptId": "owgw", "type": "related", "label": "fournit les configs à" },
+      { "conceptId": "cloud-sdk", "type": "belongs-to-layer" }
+    ],
+    "sources": [{ "title": "TIP wlan-cloud-ucentralprov", "url": "https://github.com/Telecominfraproject/wlan-cloud-owprov", "kind": "project" }]
+  },
+  {
+    "id": "firmware",
+    "name": "Firmware management",
+    "aliases": ["OWFMS", "upgrade", "mise à jour AP"],
+    "shortDefinition": "Gestion centralisée des versions logicielles des AP et switches : catalogue, planification des mises à jour, suivi.",
+    "whyItExists": "Un parc de milliers de devices multi-fabricants doit être mis à jour de façon contrôlée.",
+    "explanation": "OWFMS tient le catalogue par modèle ; le Gateway envoie une commande `upgrade` au device via uCentral, qui télécharge l’image et redémarre. Une mise à jour pendant les heures de service coupe les clients : à planifier.",
+    "category": "openwifi",
+    "difficulty": 2,
+    "prerequisites": ["cloud-sdk"],
+    "relatedConcepts": [
+      { "conceptId": "ucentral", "type": "uses", "label": "commande via" },
+      { "conceptId": "ap-nos", "type": "controls", "label": "met à jour l’" },
+      { "conceptId": "ztp", "type": "related", "label": "étape du" }
+    ],
+    "sources": [{ "title": "TIP wlan-cloud-ucentralfms", "url": "https://github.com/Telecominfraproject/wlan-cloud-ucentralfms", "kind": "project" }]
+  },
+  {
+    "id": "ztp",
+    "name": "Zero Touch Provisioning",
+    "aliases": ["ZTP", "provisioning", "onboarding", "redirector"],
+    "shortDefinition": "Processus par lequel un device sorti de sa boîte trouve tout seul son contrôleur, s’identifie, est rattaché à un tenant/site et reçoit sa configuration — sans intervention sur place.",
+    "whyItExists": "Installer 150 AP dans un hôtel avec un électricien, pas un ingénieur réseau.",
+    "whoTalksToWhom": "Device → (DHCP) → redirector (service de provisioning global, avec le certificat device) → Gateway du tenant → Provisioning → configuration.",
+    "when": "Au premier démarrage, et à chaque reset usine.",
+    "explanation": "```\nUsine : device possède une identité (serial, MAC, certificat)\n  ↓ installation chez le client\n  ↓ obtient réseau/IP (DHCP)\n  ↓ découvre le service de provisioning (redirector)\n  ↓ identification du device (certificat)\n  ↓ association tenant / site\n  ↓ découverte du Gateway\n  ↓ connexion au contrôleur (uCentral)\n  ↓ configuration téléchargée (+ firmware si requis)\n  ↓ AP opérationnel\n```\n\nLe **redirector** est un service global qui répond à la question « à quel Gateway dois-je me connecter ? » en fonction de l’identité du device. OpenLAN utilise également un processus où le switch appelle un ZTP Redirector pour découvrir le Gateway.",
+    "softwareAnalogy": "Cloud-init + service discovery + enrôlement par certificat : la machine démarre avec une identité et va chercher sa « desired configuration ».",
+    "category": "openwifi",
+    "difficulty": 2,
+    "prerequisites": ["ucentral", "dhcp"],
+    "actors": ["Device", "Redirector", "Gateway (OWGW)", "Provisioning (OWPROV)"],
+    "packetFlow": [
+      { "from": "Device", "to": "Redirector", "label": "Qui est mon Gateway ? (cert device)", "note": "Après DHCP : le device contacte l’URL de redirection intégrée au firmware." },
+      { "from": "Redirector", "to": "Device", "label": "gateway = gw.tenant.example", "note": "Le device est connu (serial/cert) et rattaché à un tenant." },
+      { "from": "Device", "to": "Gateway (OWGW)", "label": "WebSocket connect", "note": "Connexion uCentral." },
+      { "from": "Gateway (OWGW)", "to": "Provisioning (OWPROV)", "label": "Quelle config pour ce serial ?", "note": "Inventaire, site, profil." },
+      { "from": "Provisioning (OWPROV)", "to": "Gateway (OWGW)", "label": "config désirée" },
+      { "from": "Gateway (OWGW)", "to": "Device", "label": "configure / upgrade", "note": "L’AP applique et devient opérationnel." }
+    ],
+    "relatedConcepts": [
+      { "conceptId": "device-certificate", "type": "uses" },
+      { "conceptId": "owprov", "type": "uses" },
+      { "conceptId": "owgw", "type": "routes-to", "label": "aboutit au" },
+      { "conceptId": "tenant", "type": "assigns", "label": "rattache au" },
+      { "conceptId": "dhcp", "type": "depends-on" },
+      { "conceptId": "dns", "type": "depends-on", "label": "résolution du redirector" },
+      { "conceptId": "firmware", "type": "uses" }
+    ],
+    "failureSymptoms": ["AP neuf jamais visible dans le cloud : pas de DHCP/DNS sur le VLAN de management, sortie HTTPS/WebSocket bloquée, device non enregistré dans l’inventaire, certificat/horloge."],
+    "sources": [{ "title": "TIP OpenWiFi documentation", "url": "https://openwifi.tip.build/", "kind": "project" }]
+  },
+  {
+    "id": "device-certificate",
+    "name": "Certificat device",
+    "aliases": ["device identity", "serial number", "identité usine"],
+    "shortDefinition": "Certificat X.509 unique installé sur chaque AP/switch (en usine ou via TIP) qui l’authentifie auprès du redirector et du Gateway.",
+    "whyItExists": "Le cloud doit être sûr que le device qui se connecte est bien celui qu’il prétend être, avant de lui pousser une configuration (secrets RADIUS, clés Wi-Fi).",
+    "explanation": "L’identité du device = serial number + MAC + certificat. Elle est la clé de l’inventaire (Provisioning) et du TLS mutuel uCentral. Une horloge fausse (NTP) ou un certificat expiré empêche l’onboarding.",
+    "category": "openwifi",
+    "difficulty": 2,
+    "prerequisites": ["certificates"],
+    "relatedConcepts": [
+      { "conceptId": "ucentral", "type": "related", "label": "TLS mutuel" },
+      { "conceptId": "ztp", "type": "related" },
+      { "conceptId": "certificates", "type": "related" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "tenant",
+    "name": "Tenant / Organization / Site",
+    "aliases": ["multi-tenant", "venue", "location", "organisation"],
+    "shortDefinition": "Hiérarchie logique de la plateforme : un tenant (client) possède des organisations/sites (venues) qui regroupent des devices et des politiques.",
+    "whyItExists": "Un fournisseur de services gère des centaines de clients depuis une seule plateforme, avec isolation et délégation.",
+    "explanation": "Un AP appartient à un site ; un site hérite des profils (SSID, RADIUS, VLAN, RRM) de son organisation ; un tenant est isolé des autres. NetExperience décrit une gestion multi-tenant.",
+    "softwareAnalogy": "Organisation → projet → ressource, comme dans n’importe quel SaaS B2B multi-tenant.",
+    "category": "openwifi",
+    "difficulty": 1,
+    "prerequisites": [],
+    "relatedConcepts": [
+      { "conceptId": "owprov", "type": "related", "label": "modélisé par" },
+      { "conceptId": "ztp", "type": "related", "label": "cible du" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "cloud-controller",
+    "name": "Cloud controller",
+    "aliases": ["contrôleur cloud", "plateforme de gestion", "NetExperience"],
+    "shortDefinition": "La plateforme (SaaS) qui pilote les AP et switches : provisioning, configuration, RRM, firmware, analytics, captive portal, diagnostics — sans transporter le trafic utilisateur.",
+    "whyItExists": "Gérer des milliers de devices, multi-sites et multi-fabricants, depuis un seul endroit.",
+    "whoTalksToWhom": "Devices ↔ contrôleur (uCentral, control plane) ; administrateurs ↔ contrôleur (UI / API).",
+    "when": "En permanence, mais son absence temporaire n’arrête pas le trafic des utilisateurs.",
+    "explanation": "NetExperience se présente comme une plateforme SaaS de gestion OpenWiFi/OpenLAN indépendante du fabricant : provisioning, contrôle WLAN, RRM, analytics, multi-tenant, firmware, captive portal, RADIUS/mPSK, Passpoint/OpenRoaming et diagnostics (PCAP). Le contrôleur est le **control plane** ; le trafic Internet des utilisateurs n’a pas besoin de transiter par lui.",
+    "softwareAnalogy": "Le contrôleur OpenWiFi correspond au control plane. Comme un Kubernetes API server : s’il tombe, les pods continuent de tourner, mais on ne peut plus rien changer.",
+    "category": "openwifi",
+    "difficulty": 1,
+    "prerequisites": ["openwifi"],
+    "relatedConcepts": [
+      { "conceptId": "control-plane", "type": "belongs-to-layer" },
+      { "conceptId": "cloud-sdk", "type": "uses", "label": "construit sur" },
+      { "conceptId": "rrm", "type": "controls" },
+      { "conceptId": "ztp", "type": "controls" },
+      { "conceptId": "analytics", "type": "uses" },
+      { "conceptId": "openlan", "type": "controls" }
+    ],
+    "failureSymptoms": ["Contrôleur injoignable : impossible de changer une config ou de voir les métriques, mais les clients Wi-Fi continuent de naviguer."],
+    "sources": [{ "title": "NetExperience", "url": "https://www.netexperience.com/", "kind": "vendor" }]
+  },
+  {
+    "id": "control-plane",
+    "name": "Control plane",
+    "aliases": ["plan de contrôle", "management plane"],
+    "shortDefinition": "Le chemin par lequel la configuration et la télémétrie circulent entre les devices et le contrôleur (uCentral), distinct du chemin des données utilisateur.",
+    "whyItExists": "Séparer « décider/configurer » de « transporter » permet de scaler : le contrôleur ne voit pas les gigabits de trafic utilisateur.",
+    "explanation": "```\n                  CONTROL PLANE\nAP ───────────────────────────── Cloud\n        config / telemetry\n\n                   DATA PLANE\nPhone → AP → Switch → Router → Internet\n```\n\nLe trafic utilisateur n’a **pas** besoin de faire Phone → AP → NetExperience Cloud → Internet. Dans une architecture de **local breakout**, le trafic sort localement par le routeur du site. C’est fondamental pour comprendre la scalabilité d’une architecture OpenWiFi — et pourquoi un AP peut continuer à transporter du trafic même si sa connexion au contrôleur cloud est temporairement perdue.",
+    "softwareAnalogy": "Control plane = Kubernetes API server / etcd ; data plane = les pods et le kube-proxy. Un déploiement continue de servir si l’API server est down.",
+    "category": "openwifi",
+    "difficulty": 1,
+    "prerequisites": ["openwifi"],
+    "relatedConcepts": [
+      { "conceptId": "data-plane", "type": "related", "label": "≠" },
+      { "conceptId": "ucentral", "type": "uses", "label": "réalisé par" },
+      { "conceptId": "cloud-controller", "type": "related" },
+      { "conceptId": "telemetry", "type": "encapsulates" }
+    ],
+    "failureSymptoms": ["AP hors ligne dans la console, clients OK : control plane brisé, data plane intact."],
+    "sources": []
+  },
+  {
+    "id": "data-plane",
+    "name": "Data plane / local breakout",
+    "aliases": ["plan de données", "forwarding plane", "local breakout", "user traffic"],
+    "shortDefinition": "Le chemin du trafic utilisateur : téléphone → AP → switch → routeur → Internet, entièrement local au site.",
+    "whyItExists": "Le trafic doit prendre le chemin le plus court et ne pas dépendre du cloud de gestion.",
+    "explanation": "Le data plane est exécuté par l’AP NOS et le switch, localement. « Local breakout » = le trafic sort vers Internet depuis le site, sans tunnel vers le contrôleur. Conséquence : une panne du cloud ne coupe pas les utilisateurs ; une panne de DHCP, de VLAN ou de la gateway locale, oui.",
+    "category": "openwifi",
+    "difficulty": 1,
+    "prerequisites": ["control-plane"],
+    "relatedConcepts": [
+      { "conceptId": "control-plane", "type": "related", "label": "≠" },
+      { "conceptId": "ap-nos", "type": "related", "label": "exécuté par" },
+      { "conceptId": "gateway", "type": "routes-to", "label": "sort par la" },
+      { "conceptId": "vlan", "type": "uses" }
+    ],
+    "sources": []
+  },
+  {
+    "id": "openlan",
+    "name": "OpenLAN",
+    "aliases": ["OpenLAN switching", "switch OpenWiFi", "managed switch cloud"],
+    "shortDefinition": "Extension d’OpenWiFi au switching : des switches multi-fabricants exécutant un NOS ouvert, pilotés depuis le même cloud via uCentral.",
+    "whyItExists": "Gérer les switches (ports, VLAN, PoE, uplinks) depuis la même plateforme que les AP, avec le même ZTP.",
+    "whoTalksToWhom": "Switch (client uCentral) ↔ Gateway ; switch ↔ AP (LLDP, PoE, trunk).",
+    "when": "Architecture.",
+    "explanation": "```\nOpenLAN Switch\n      │  uCentral\n      ▼\nCloud controller\n```\n\nConcepts côté switch : managed switch, ports, VLAN, trunk, PoE, LLDP, STP/RSTP, LACP, configuration de port, télémétrie, ZTP. NetExperience présente OpenLAN comme complément d’OpenWiFi pour gérer des switches multi-vendor depuis la même plateforme. Le ZTP du switch passe aussi par un redirector pour découvrir son Gateway.",
+    "category": "openwifi",
+    "difficulty": 2,
+    "prerequisites": ["openwifi", "switch"],
+    "relatedConcepts": [
+      { "conceptId": "switch", "type": "controls" },
+      { "conceptId": "ucentral", "type": "uses" },
+      { "conceptId": "vlan", "type": "controls", "label": "configure les" },
+      { "conceptId": "poe", "type": "controls" },
+      { "conceptId": "lldp", "type": "uses" },
+      { "conceptId": "ztp", "type": "uses" },
+      { "conceptId": "openwifi", "type": "related" }
+    ],
+    "sources": [{ "title": "NetExperience — OpenLAN", "url": "https://www.netexperience.com/", "kind": "vendor" }]
+  }
+]

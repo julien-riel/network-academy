@@ -1,0 +1,72 @@
+{
+  "id": "ip",
+  "order": 3,
+  "title": "IP : adresses, subnets, gateway",
+  "subtitle": "Local ou distant ? La seule question qu’un hôte se pose avant d’envoyer un paquet.",
+  "domain": "fundamentals",
+  "concepts": ["ip", "ipv4", "ipv6", "subnet", "gateway", "router", "nat", "private-ip", "icmp", "tcp", "udp"],
+  "prerequisites": ["osi"],
+  "quiz": ["q-ip-01", "q-ip-02", "q-ip-03", "q-ip-04", "q-ip-05", "q-ip-06", "q-ip-07", "q-net-12"],
+  "lessons": [
+    {
+      "id": "ip-1",
+      "title": "Adresses et subnets",
+      "minutes": 7,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Une adresse IPv4 (192.168.10.54) identifie un hôte **et** le réseau où il se trouve. Le préfixe CIDR (/24) dit combien de bits identifient le réseau. Tout ce dont tu as besoin : savoir si une destination est dans le même réseau (on lui parle directement, via ARP) ou pas (on passe par la gateway)."
+        },
+        {
+          "type": "diagram",
+          "title": "192.168.10.54/24",
+          "text": "192.168.10.54 /24\n└─────┬────┘ └┬┘\n   réseau    hôte      (/24 = 24 bits réseau, 8 bits hôte)\n\nAdresse réseau   192.168.10.0\nPremier hôte     192.168.10.1     (souvent la gateway)\nDernier hôte     192.168.10.254\nBroadcast        192.168.10.255\n\n192.168.10.200  → même réseau     → parler directement (ARP)\n192.168.11.20   → autre réseau    → passer par la gateway\n8.8.8.8         → autre réseau    → passer par la gateway"
+        },
+        { "type": "concepts", "ids": ["subnet", "ipv4"] },
+        {
+          "type": "callout",
+          "kind": "idea",
+          "text": "La précision mathématique doit rester limitée. Le réflexe utile : « même réseau ou pas ? ». Les /24 (256 adresses) sont de loin les plus courants dans les réseaux d’accès ; un VLAN = un subnet."
+        },
+        {
+          "type": "paragraph",
+          "text": "Les adresses **privées** (10.x, 172.16–31.x, 192.168.x) ne sont pas routées sur Internet : le routeur fait du **NAT** pour les traduire vers une adresse publique. **IPv6** supprime la pénurie (adresses de 128 bits), remplace ARP par Neighbor Discovery et annonce la gateway par Router Advertisement."
+        },
+        { "type": "concepts", "ids": ["private-ip", "nat", "ipv6"] },
+        { "type": "exercise", "questionIds": ["q-ip-01", "q-ip-02", "q-ip-03"] }
+      ]
+    },
+    {
+      "id": "ip-2",
+      "title": "Gateway, routeur, ping",
+      "minutes": 6,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "La **gateway** est le routeur auquel l’hôte envoie tout ce qui sort de son subnet. Il apprend son adresse par DHCP, résout sa MAC par ARP, puis lui adresse les trames. Le **routeur** regarde l’IP de destination, choisit le prochain saut, réécrit les MAC, et souvent fait aussi le NAT et le routage entre VLAN."
+        },
+        {
+          "type": "diagram",
+          "title": "Le chemin d’un paquet vers Internet",
+          "text": "Phone 192.168.20.37 ──))── AP ── Switch ── Routeur/gateway 192.168.20.1 ── NAT ── Internet\n      │                                        │\n      │  dst 142.250.x.x : pas mon réseau      │  src devient 203.0.113.9 (IP publique)\n      │  → trame vers MAC de la gateway        │  → route par défaut vers le FAI\n      ▼                                        ▼"
+        },
+        { "type": "concepts", "ids": ["gateway", "router", "icmp"] },
+        {
+          "type": "callout",
+          "kind": "remember",
+          "title": "Le test en trois pings",
+          "text": "- `ping 192.168.20.1` (gateway) → teste couche 2 + ARP + IP local.\n- `ping 8.8.8.8` → teste le routage et le NAT jusqu’à Internet, **sans DNS**.\n- `ping google.com` → teste en plus la résolution DNS.\n\nSi le deuxième marche et pas le troisième : DNS."
+        },
+        { "type": "exercise", "questionIds": ["q-ip-04", "q-ip-05"] },
+        {
+          "type": "takeaways",
+          "items": [
+            "Même subnet → direct (ARP). Autre subnet → gateway.",
+            "La gateway vient de DHCP ; sa MAC vient d’ARP.",
+            "Trois pings pour localiser : gateway, IP publique, nom."
+          ]
+        }
+      ]
+    }
+  ]
+}
