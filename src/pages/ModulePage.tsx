@@ -11,8 +11,9 @@ export default function ModulePage() {
   const m = moduleId ? moduleById.get(moduleId) : undefined
   const p = useProgress()
   const [quizOpen, setQuizOpen] = useState(false)
+  const quizPool = useMemo(() => (m?.quiz ?? []).map((id) => questionById.get(id)).filter((q) => q != null), [m])
   // A new random order each time the quiz is opened.
-  const quiz = useMemo(() => shuffle((m?.quiz ?? []).map((id) => questionById.get(id)).filter((q) => q != null)), [m, quizOpen])
+  const [quiz, setQuiz] = useState(() => shuffle(quizPool))
   if (!m) return <Empty>Module introuvable.</Empty>
   const quizDone = p.results.find((r) => r.kind === 'module' && r.moduleId === m.id)
   const allLessonsDone = m.lessons.every((l) => p.lessonsDone[l.id])
@@ -54,7 +55,7 @@ export default function ModulePage() {
               {!allLessonsDone && ' Tu peux le faire maintenant, mais il est conseillé de terminer les leçons d’abord.'}
             </p>
             {!quizOpen ? (
-              <button className="btn primary" onClick={() => setQuizOpen(true)}>
+              <button className="btn primary" onClick={() => { setQuiz(shuffle(quizPool)); setQuizOpen(true) }}>
                 {quizDone ? 'Refaire le quiz' : 'Commencer le quiz'}
               </button>
             ) : (
